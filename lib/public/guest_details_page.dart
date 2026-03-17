@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ticketing_flutter/public/booking_summary.dart';
 import 'package:ticketing_flutter/services/flight.dart';
+import 'package:ticketing_flutter/services/user_service.dart';
 
 class GuestDetailsPage extends StatefulWidget {
   final Flight flight;
@@ -90,6 +91,95 @@ class _GuestDetailsPageState extends State<GuestDetailsPage> {
     super.initState();
     _passengers = _buildPassengers();
     _guestForms = List.generate(_passengers.length, (_) => _GuestFormModel());
+    _prefillFromCurrentUser();
+  }
+
+  Future<void> _prefillFromCurrentUser() async {
+    try {
+      final userService = UserService();
+      final loggedIn = await userService.isLoggedIn();
+      if (!loggedIn) return;
+
+      final user = await userService.getCurrentUser();
+      if (user == null) return;
+
+      String? readField(Map<String, dynamic> m, List<String> keys) {
+        for (final k in keys) {
+          if (m.containsKey(k) && m[k] != null) {
+            return m[k].toString();
+          }
+        }
+        return null;
+      }
+
+      final firstAdultIndex = _passengers.indexWhere(
+        (p) => p.type == _PassengerType.adult,
+      );
+      final targetIndex = firstAdultIndex == -1 ? 0 : firstAdultIndex;
+      final form = _guestForms[targetIndex];
+
+      final firstName = readField(user, [
+        'FirstName',
+        'firstName',
+        'firstname',
+      ]);
+      final lastName = readField(user, ['LastName', 'lastName', 'lastname']);
+      final phone = readField(user, [
+        'PhoneNumber',
+        'phoneNumber',
+        'phone',
+        'Phone',
+      ]);
+      final email = readField(user, ['Email', 'email']);
+      final dobRaw = readField(user, [
+        'DateOfBirth',
+        'dateOfBirth',
+        'dob',
+        'birthdate',
+      ]);
+
+      setState(() {
+        if (firstName != null) form.firstNameController.text = firstName;
+        if (lastName != null) form.lastNameController.text = lastName;
+        if (phone != null) form.mobileNumberController.text = phone;
+        if (email != null) form.emailController.text = email;
+
+        if (dobRaw != null) {
+          try {
+            final parsed = DateTime.parse(dobRaw);
+            form.dob = parsed;
+            form.age = _calculateAge(parsed);
+            form.ageController.text = form.age?.toString() ?? '';
+          } catch (_) {
+            // try dd/mm/yyyy or other simple formats
+            final parts = dobRaw.split(RegExp(r'[-\/]'));
+            if (parts.length == 3) {
+              try {
+                int y = 0, m = 1, d = 1;
+                if (parts[0].length == 4) {
+                  y = int.parse(parts[0]);
+                  m = int.parse(parts[1]);
+                  d = int.parse(parts[2]);
+                } else {
+                  d = int.parse(parts[0]);
+                  m = int.parse(parts[1]);
+                  y = int.parse(parts[2]);
+                }
+                final parsed = DateTime(y, m, d);
+                form.dob = parsed;
+                form.age = _calculateAge(parsed);
+                form.ageController.text = form.age?.toString() ?? '';
+              } catch (_) {
+                // ignore parse errors
+              }
+            }
+          }
+        }
+      });
+    } catch (e) {
+      // non-fatal: if we can't prefill, continue silently
+      return;
+    }
   }
 
   List<_PassengerDescriptor> _buildPassengers() {

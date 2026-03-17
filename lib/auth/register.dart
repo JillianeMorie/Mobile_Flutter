@@ -242,7 +242,14 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        Navigator.pop(context); // Go back to the login page
+                        final email = emailController.text.trim();
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                LoginPage(initialEmail: email),
+                          ),
+                        );
                       },
                       child: const Text(
                         "Login now",
@@ -415,17 +422,19 @@ class _RegisterPageState extends State<RegisterPage> {
       ),
     );
 
-    // Wait for 2 seconds, then close dialog and go back to login
+    // Wait 2 seconds, then close dialog and go to login so they can sign in
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
-      Navigator.of(context)
-        ..pop() // Close the dialog
-        ..pop(); // Go back to login page
-      // Or navigate to login page
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
+      Navigator.of(context).pop(); // Close the dialog only
+      if (mounted) {
+        final email = emailController.text.trim();
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LoginPage(initialEmail: email),
+          ),
+        );
+      }
     }
   }
 }

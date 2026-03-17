@@ -2,17 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:ticketing_flutter/auth/register.dart';
 import 'package:ticketing_flutter/services/user_service.dart';
 import 'package:ticketing_flutter/public/home.dart';
+import 'package:ticketing_flutter/user/user_board.dart';
 //import 'package:ticketing_flutter/admin/admin_dashboard.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  /// When coming from registration, pass the email so user only needs to enter password.
+  final String? initialEmail;
+
+  const LoginPage({super.key, this.initialEmail});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController emailController = TextEditingController();
+  late final TextEditingController emailController = TextEditingController(
+    text: widget.initialEmail ?? '',
+  );
   final TextEditingController passwordController = TextEditingController();
 
   @override
@@ -42,6 +48,15 @@ class _LoginPageState extends State<LoginPage> {
                     color: Colors.white,
                   ),
                 ),
+                if (widget.initialEmail != null &&
+                    widget.initialEmail!.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  const Text(
+                    "Account created! Log in with your email and password.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.greenAccent),
+                  ),
+                ],
                 const SizedBox(height: 30),
 
                 // Gmail input
@@ -179,12 +194,12 @@ class _LoginPageState extends State<LoginPage> {
         // Login successful
         if (mounted) {
           _showSuccessDialog();
-          // Navigate to home page after a short delay
+          // Navigate to user dashboard after a short delay
           await Future.delayed(const Duration(seconds: 1));
           if (mounted) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const Home()),
+              MaterialPageRoute(builder: (context) => const Book()),
             );
           }
         }

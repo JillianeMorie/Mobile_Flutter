@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:ticketing_flutter/services/flight.dart';
 import 'guest_details_page.dart';
+import 'user_booking_details.dart';
+import 'package:ticketing_flutter/services/user_service.dart';
 
 class FlightBundlesPage extends StatefulWidget {
   final Flight flight;
@@ -208,7 +210,7 @@ class _FlightBundlesPageState extends State<FlightBundlesPage> {
                                     SizedBox(
                                       width: double.infinity,
                                       child: ElevatedButton(
-                                        onPressed: () {
+                                        onPressed: () async {
                                           final travelerCount =
                                               widget.adults +
                                               widget.children +
@@ -223,17 +225,30 @@ class _FlightBundlesPageState extends State<FlightBundlesPage> {
                                           final double forwardedPrice =
                                               _selectedTotalPrice ??
                                               defaultTotalPrice;
+                                          // If user is logged in, go to user booking details
+                                          final userService = UserService();
+                                          final loggedIn = await userService
+                                              .isLoggedIn();
+                                          final routeWidget = loggedIn
+                                              ? UserBookingDetailsPage(
+                                                  flight: widget.flight,
+                                                  bundle: bundle,
+                                                  adults: widget.adults,
+                                                  children: widget.children,
+                                                  infants: widget.infants,
+                                                )
+                                              : GuestDetailsPage(
+                                                  flight: widget.flight,
+                                                  bundle: bundle,
+                                                  adults: widget.adults,
+                                                  children: widget.children,
+                                                  infants: widget.infants,
+                                                );
+
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) =>
-                                                  GuestDetailsPage(
-                                                    flight: widget.flight,
-                                                    bundle: bundle,
-                                                    adults: widget.adults,
-                                                    children: widget.children,
-                                                    infants: widget.infants,
-                                                  ),
+                                              builder: (context) => routeWidget,
                                               settings: RouteSettings(
                                                 arguments: {
                                                   'selectedPrice':

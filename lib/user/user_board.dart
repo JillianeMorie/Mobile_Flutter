@@ -6,13 +6,11 @@ import 'package:ticketing_flutter/public/search_flight.dart';
 import 'package:ticketing_flutter/auth/login.dart';
 import 'package:ticketing_flutter/services/countries.dart';
 import 'package:ticketing_flutter/public/about.dart';
+import 'package:ticketing_flutter/user/account_details.dart';
 import 'package:ticketing_flutter/public/explore.dart';
 import 'package:ticketing_flutter/public/travel_info.dart';
 import 'package:ticketing_flutter/public/manage/manage.dart';
 import 'package:ticketing_flutter/public/bookpage.dart';
-import 'package:ticketing_flutter/public/my_account_details.dart';
-import 'package:ticketing_flutter/services/user_service.dart';
-import 'package:ticketing_flutter/public/home.dart';
 
 import 'dart:async';
 
@@ -38,7 +36,6 @@ class _Book extends State<Book> {
   int _departurePrice = 2000; // Default price below Departure
 
   bool _isSearchPressed = false;
-  bool _isLoggedIn = false;
 
   @override
   void initState() {
@@ -46,15 +43,8 @@ class _Book extends State<Book> {
     box7Controller.text = "${_adults + _children + _infants} Passengers";
     box8Controller.text = _selectedClass;
     _calculatePrice(); // Calculate price initially
-    _loadLoginState();
 
     // auto-sliding info bar setup
-  }
-
-  Future<void> _loadLoginState() async {
-    final logged = await UserService().isLoggedIn();
-    if (!mounted) return;
-    setState(() => _isLoggedIn = logged);
   }
 
   // New function to centralize price calculation
@@ -331,44 +321,23 @@ class _Book extends State<Book> {
               },
             ),
             ListTile(
-              leading: Icon(
-                _isLoggedIn ? Icons.person : Icons.login,
-                color: Colors.white,
-              ),
-              title: Text(
-                _isLoggedIn ? 'My Account Details' : 'Login',
-                style: const TextStyle(color: Colors.white),
+              leading: const Icon(Icons.account_circle, color: Colors.white),
+              title: const Text(
+                'My Account',
+                style: TextStyle(color: Colors.white),
               ),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
                   PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) => _isLoggedIn
-                        ? const MyAccountDetailsPage()
-                        : const LoginPage(),
+                    pageBuilder: (context, animation1, animation2) =>
+                        const MyAccountDetailsPage(),
                     transitionDuration: Duration.zero,
                   ),
                 );
               },
             ),
-            if (_isLoggedIn)
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.white),
-                title:
-                    const Text('Logout', style: TextStyle(color: Colors.white)),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await UserService().logout();
-                  if (!mounted) return;
-                  setState(() => _isLoggedIn = false);
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (_) => const Home()),
-                    (route) => false,
-                  );
-                },
-              ),
           ],
         ),
       ),
