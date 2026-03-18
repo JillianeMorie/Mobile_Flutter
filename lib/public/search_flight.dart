@@ -10,7 +10,7 @@ final List<Flight> _mockFlights = [
     from: "Philippines - Manila",
     to: "Philippines - Cebu",
     airline: "Philippine Airlines",
-    date: "2025-12-20",
+    date: "2026-12-20",
     time: "08:00 AM",
     price: 125.00,
     departureTime: DateTime.parse("2025-12-20T08:00:00"),

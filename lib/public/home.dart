@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ticketing_flutter/public/book.dart';
 import 'package:ticketing_flutter/auth/login.dart'; // Add this import
+import 'package:ticketing_flutter/public/scan_booking_qr.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -376,6 +377,18 @@ class _HomeState extends State<Home> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: const Color(0xFF1E3A8A),
+        icon: const Icon(Icons.qr_code_scanner),
+        label: const Text('Scan Booking QR'),
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const ScanBookingQrPage(),
+            ),
+          );
+        },
       ),
     );
   }

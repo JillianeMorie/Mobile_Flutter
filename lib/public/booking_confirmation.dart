@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:ticketing_flutter/services/flight.dart';
 import 'package:ticketing_flutter/public/home.dart';
+import 'package:ticketing_flutter/auth/register.dart';
 
 class BookingConfirmationPage extends StatelessWidget {
   final Flight flight;
@@ -123,6 +127,27 @@ class BookingConfirmationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Generate a stable booking reference for this screen build
+    final bookingRef = DateTime.now().millisecondsSinceEpoch
+        .toString()
+        .substring(7);
+
+    // Encode all important booking data into the QR so it can be scanned
+    // inside the app and reconstructed into a confirmation screen.
+    final qrData = jsonEncode({
+      'bookingRef': bookingRef,
+      'flight': flight.toJson(),
+      'bundle': bundle,
+      'guests': guests,
+      'seatAssignments': seatAssignments,
+      'selectedPrice': selectedPrice,
+      'travelClass': travelClass,
+      'adults': adults,
+      'children': children,
+      'infants': infants,
+      'paymentMethod': paymentMethod,
+    });
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       body: Container(
@@ -168,7 +193,7 @@ class BookingConfirmationPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      "Booking Reference: ${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}",
+                      "Booking Reference: $bookingRef",
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 14,
@@ -405,7 +430,7 @@ class BookingConfirmationPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
 
-                      // Action Button
+                      // Action Buttons
                       SizedBox(
                         width: double.infinity,
                         height: 56,
@@ -431,6 +456,107 @@ class BookingConfirmationPage extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1,
                               color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Generate QR code button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Colors.blueAccent),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                title: const Text(
+                                  "Boarding QR Code",
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                content: SizedBox(
+                                  width: 260,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      SizedBox(
+                                        width: 220,
+                                        height: 220,
+                                        child: QrImageView(
+                                          data: qrData,
+                                          version: QrVersions.auto,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        "Booking Ref: $bookingRef",
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      const Text(
+                                        "Show this QR code at the airport for faster check‑in.",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(),
+                                    child: const Text("Close"),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.qr_code_2,
+                            color: Colors.blueAccent,
+                          ),
+                          label: const Text(
+                            "Generate QR Code",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.blueAccent,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Center(
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const RegisterPage(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            "Create an account now!",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.blueAccent,
+                              decoration: TextDecoration.underline,
                             ),
                           ),
                         ),
