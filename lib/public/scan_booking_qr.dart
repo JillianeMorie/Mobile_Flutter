@@ -90,28 +90,20 @@ class _ScanBookingQrPageState extends State<ScanBookingQrPage> {
       ),
       body: Stack(
         children: [
-          MobileScanner(
-            fit: BoxFit.cover,
-            onDetect: _handleBarcode,
-          ),
+          MobileScanner(fit: BoxFit.cover, onDetect: _handleBarcode),
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.6),
-              ),
+              decoration: BoxDecoration(color: Colors.black.withOpacity(0.6)),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
                     'Point the camera at the booking QR code.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.white, fontSize: 14),
                   ),
                   if (_error != null) ...[
                     const SizedBox(height: 8),
@@ -133,4 +125,3 @@ class _ScanBookingQrPageState extends State<ScanBookingQrPage> {
     );
   }
 }
-

@@ -1,4 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/public/book.dart';
+import 'package:ticketing_flutter/public/about.dart';
+import 'package:ticketing_flutter/public/explore.dart';
+import 'package:ticketing_flutter/public/travel_info.dart';
+import 'package:ticketing_flutter/public/manage/manage.dart';
+import 'package:ticketing_flutter/auth/login.dart';
+import 'package:ticketing_flutter/public/my_account_details.dart';
+import 'package:ticketing_flutter/services/user_service.dart';
 
 // --- CEBU PACIFIC INSPIRED COLOR PALETTE ---
 const Color cebPrimaryBlue = Color(0xFF15A7E0); // Bright Blue/Cyan
@@ -46,8 +54,27 @@ class FlightBookingApp extends StatelessWidget {
   }
 }
 
-class BookPage extends StatelessWidget {
+class BookPage extends StatefulWidget {
   const BookPage({super.key});
+
+  @override
+  State<BookPage> createState() => _BookPageState();
+}
+
+class _BookPageState extends State<BookPage> {
+  bool _isLoggedIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLoginState();
+  }
+
+  Future<void> _loadLoginState() async {
+    final logged = await UserService().isLoggedIn();
+    if (!mounted) return;
+    setState(() => _isLoggedIn = logged);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,12 +90,165 @@ class BookPage extends StatelessWidget {
       child: DefaultTabController(
         length: 3,
         child: Scaffold(
+          drawer: Drawer(
+            width: 300.0,
+            backgroundColor: const Color(0xFF111827),
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: <Widget>[
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                  child: const DrawerHeader(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF000000),
+                          Color(0xFF111827),
+                          Color(0xFF1E3A8A),
+                        ],
+                      ),
+                    ),
+                    child: Text(
+                      'Menu',
+                      style: TextStyle(color: Colors.white, fontSize: 24),
+                    ),
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.flight, color: Colors.white),
+                  title: const Text(
+                    'Book',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushReplacement(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation1, animation2) =>
+                            const FlightBookingApp(),
+                        transitionDuration: Duration.zero,
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.manage_accounts,
+                    color: Colors.white,
+                  ),
+                  title: const Text(
+                    'Manage',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation1, animation2) =>
+                            const ManagePage(),
+                        transitionDuration: Duration.zero,
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.info, color: Colors.white),
+                  title: const Text(
+                    'Travel Info',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation1, animation2) =>
+                            const TravelInfoPage(),
+                        transitionDuration: Duration.zero,
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.explore, color: Colors.white),
+                  title: const Text(
+                    'Explore',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation1, animation2) =>
+                            const ExplorePage(),
+                        transitionDuration: Duration.zero,
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.home, color: Colors.white),
+                  title: const Text(
+                    'About',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation1, animation2) =>
+                            const About(),
+                        transitionDuration: Duration.zero,
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(
+                    _isLoggedIn ? Icons.person : Icons.login,
+                    color: Colors.white,
+                  ),
+                  title: Text(
+                    _isLoggedIn ? 'My Account Details' : 'Login',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation1, animation2) =>
+                            _isLoggedIn
+                            ? const MyAccountDetailsPage()
+                            : const LoginPage(),
+                        transitionDuration: Duration.zero,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
           // 2. Set Scaffold background to transparent so the wrapping gradient shows
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             // 3. AppBar background is transparent (from theme, but set explicitly here too)
             backgroundColor: Colors.transparent,
             elevation: 0, // 4. Remove shadow
+            leading: IconButton(
+              icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            ),
             title: const Text('Book Your Flight'),
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(kToolbarHeight),

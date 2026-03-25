@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ticketing_flutter/public/book.dart';
-import 'package:ticketing_flutter/auth/login.dart'; // Add this import
 import 'package:ticketing_flutter/public/scan_booking_qr.dart';
+import 'package:ticketing_flutter/auth/login.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -11,10 +11,13 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  bool _isPressed = false;
-  bool _isHovered = false;
+  bool _isGetStartedPressed = false;
+  bool _isGetStartedHovered = false;
 
-  bool _signInPressed = false;
+  bool _isLoginPressed = false;
+  bool _isLoginHovered = false;
+
+  bool _scanQrPressed = false;
 
   late PageController _pageController;
   int _currentPage = 0;
@@ -106,7 +109,7 @@ class _HomeState extends State<Home> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Airlines Ticketing',
+                      'AIRLINES TICKETING',
                       style: TextStyle(
                         color: Colors.black,
                         fontSize: 20,
@@ -130,8 +133,7 @@ class _HomeState extends State<Home> {
             ),
           ),
 
-          // Sign In text on the right side
-          // Sign In text on the right side
+          // Scan QR icon on the right side
           Positioned(
             top:
                 50 +
@@ -139,24 +141,20 @@ class _HomeState extends State<Home> {
                 15, // 50 (start) + 32.5 (center) - 15 (half button height) = 67.5
             right: 20, // Right margin
             child: GestureDetector(
-              onTapDown: (_) => setState(() => _signInPressed = true),
-              onTapUp: (_) => setState(() => _signInPressed = false),
-              onTapCancel: () => setState(() => _signInPressed = false),
+              onTapDown: (_) => setState(() => _scanQrPressed = true),
+              onTapUp: (_) => setState(() => _scanQrPressed = false),
+              onTapCancel: () => setState(() => _scanQrPressed = false),
               onTap: () {
                 Navigator.of(context).push(
-                  PageRouteBuilder(
-                    pageBuilder: (_, __, ___) => const LoginPage(),
-                    transitionDuration: Duration.zero,
-                    reverseTransitionDuration: Duration.zero,
-                  ),
+                  MaterialPageRoute(builder: (_) => const ScanBookingQrPage()),
                 );
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
                 curve: Curves.easeInOut,
                 padding: EdgeInsets.symmetric(
-                  horizontal: _signInPressed ? 21 : 15, // widen on touch
-                  vertical: 8,
+                  horizontal: _scanQrPressed ? 12 : 8,
+                  vertical: _scanQrPressed ? 12 : 8,
                 ),
                 decoration: BoxDecoration(
                   color: const Color.fromARGB(
@@ -167,14 +165,10 @@ class _HomeState extends State<Home> {
                   ), // Blue background
                   borderRadius: BorderRadius.circular(20), // Rounded corners
                 ),
-                child: Text(
-                  'Sign In',
-                  style: TextStyle(
-                    color: Colors.white, // White text on blue background
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Gothic',
-                  ),
+                child: Icon(
+                  Icons.qr_code_scanner,
+                  color: Colors.white,
+                  size: 20,
                 ),
               ),
             ),
@@ -287,108 +281,166 @@ class _HomeState extends State<Home> {
             ),
           ),
 
-          // Get Started Button
+          // Get Started + Login Buttons
           Positioned(
-            bottom: 100,
+            bottom: 70,
             left: 0,
             right: 0,
-            child: Center(
-              child: GestureDetector(
-                onTapDown: (_) {
-                  setState(() {
-                    _isPressed = true;
-                    _isHovered = true;
-                  });
-                },
-                onTapUp: (_) {
-                  setState(() {
-                    _isPressed = false;
-                    _isHovered = false;
-                  });
-                  Navigator.of(context).push(
-                    PageRouteBuilder(
-                      pageBuilder: (_, __, ___) => const Book(),
-                      transitionDuration: Duration.zero,
-                      reverseTransitionDuration: Duration.zero,
-                    ),
-                  );
-                },
-                onTapCancel: () {
-                  setState(() {
-                    _isPressed = false;
-                    _isHovered = false;
-                  });
-                },
-                onPanDown: (_) => setState(() => _isHovered = true),
-                onPanEnd: (_) => setState(() {
-                  _isHovered = false;
-                  _isPressed = false; // ensure it returns to original size
-                }),
-                onPanCancel: () => setState(() {
-                  _isHovered = false;
-                  _isPressed = false; // ensure it returns to original size
-                }),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeInOut,
-                  height: 60,
-                  width: _isPressed ? 320 : 300, // widen box on press
-                  padding: EdgeInsets.symmetric(
-                    horizontal: _isPressed ? 24 : 20, // widen content on press
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    border: Border.all(
-                      color: _isPressed
-                          ? Colors.blue.shade300
-                          : _isHovered
-                          ? Colors.blue.shade200
-                          : Colors.white,
-                      width: 2,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(_isHovered ? 0.2 : 0.1),
-                        blurRadius: _isHovered ? 35 : 25,
-                        offset: Offset(0, _isHovered ? 15 : 10),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onTapDown: (_) {
+                    setState(() {
+                      _isGetStartedPressed = true;
+                      _isGetStartedHovered = true;
+                    });
+                  },
+                  onTapUp: (_) {
+                    setState(() {
+                      _isGetStartedPressed = false;
+                      _isGetStartedHovered = false;
+                    });
+                    Navigator.of(context).push(
+                      PageRouteBuilder(
+                        pageBuilder: (_, __, ___) => const Book(),
+                        transitionDuration: Duration.zero,
+                        reverseTransitionDuration: Duration.zero,
                       ),
-                    ],
-                  ),
-                  child: Center(
-                    child: AnimatedDefaultTextStyle(
-                      duration: const Duration(milliseconds: 200),
-                      style: TextStyle(
-                        color: _isPressed
+                    );
+                  },
+                  onTapCancel: () {
+                    setState(() {
+                      _isGetStartedPressed = false;
+                      _isGetStartedHovered = false;
+                    });
+                  },
+                  onPanDown: (_) => setState(() => _isGetStartedHovered = true),
+                  onPanEnd: (_) => setState(() {
+                    _isGetStartedHovered = false;
+                    _isGetStartedPressed = false;
+                  }),
+                  onPanCancel: () => setState(() {
+                    _isGetStartedHovered = false;
+                    _isGetStartedPressed = false;
+                  }),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    height: 60,
+                    width: _isGetStartedPressed ? 320 : 300,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: _isGetStartedPressed ? 24 : 20,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      border: Border.all(
+                        color: _isGetStartedPressed
                             ? Colors.blue.shade300
-                            : _isHovered
+                            : _isGetStartedHovered
                             ? Colors.blue.shade200
                             : Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: _isPressed
-                            ? 32
-                            : 30, // don't shrink; grow a bit on press
+                        width: 2,
                       ),
-                      child: const Text('GET STARTED'),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(
+                            _isGetStartedHovered ? 0.2 : 0.1,
+                          ),
+                          blurRadius: _isGetStartedHovered ? 35 : 25,
+                          offset: Offset(0, _isGetStartedHovered ? 15 : 10),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 200),
+                        style: TextStyle(
+                          color: _isGetStartedPressed
+                              ? Colors.blue.shade300
+                              : _isGetStartedHovered
+                              ? Colors.blue.shade200
+                              : Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: _isGetStartedPressed ? 32 : 30,
+                        ),
+                        child: const Text('GET STARTED'),
+                      ),
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTapDown: (_) {
+                    setState(() {
+                      _isLoginPressed = true;
+                      _isLoginHovered = true;
+                    });
+                  },
+                  onTapUp: (_) {
+                    setState(() {
+                      _isLoginPressed = false;
+                      _isLoginHovered = false;
+                    });
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const LoginPage()),
+                    );
+                  },
+                  onTapCancel: () {
+                    setState(() {
+                      _isLoginPressed = false;
+                      _isLoginHovered = false;
+                    });
+                  },
+                  onPanDown: (_) => setState(() => _isLoginHovered = true),
+                  onPanEnd: (_) => setState(() {
+                    _isLoginHovered = false;
+                    _isLoginPressed = false;
+                  }),
+                  onPanCancel: () => setState(() {
+                    _isLoginHovered = false;
+                    _isLoginPressed = false;
+                  }),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    height: 50,
+                    width: _isLoginPressed ? 240 : 220,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      border: Border.all(
+                        color: _isLoginPressed
+                            ? Colors.blue.shade300
+                            : _isLoginHovered
+                            ? Colors.blue.shade200
+                            : Colors.white,
+                        width: 2,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Center(
+                      child: AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 200),
+                        style: TextStyle(
+                          color: _isLoginPressed
+                              ? Colors.blue.shade300
+                              : _isLoginHovered
+                              ? Colors.blue.shade200
+                              : Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: _isLoginPressed ? 20 : 18,
+                        ),
+                        child: const Text('LOGIN'),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: const Color(0xFF1E3A8A),
-        icon: const Icon(Icons.qr_code_scanner),
-        label: const Text('Scan Booking QR'),
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const ScanBookingQrPage(),
-            ),
-          );
-        },
       ),
     );
   }

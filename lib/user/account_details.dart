@@ -78,14 +78,112 @@ class _MyAccountDetailsPageState extends State<MyAccountDetailsPage> {
             '$label: ',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Colors.white,
             ),
           ),
           Expanded(
-            child: Text(value, style: const TextStyle(color: Colors.black87)),
+            child: Text(value, style: const TextStyle(color: Colors.white70)),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildContent({
+    required String? firstName,
+    required String? lastName,
+    required String? email,
+    required String? phone,
+    required String? dob,
+    required String? gender,
+  }) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            _error!,
+            style: const TextStyle(color: Colors.red),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+              );
+            },
+            child: const Text('Login'),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blueAccent.withOpacity(0.15),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Your profile',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 8),
+              if (firstName != null || lastName != null)
+                _buildInfoItem(
+                  'Name',
+                  '${firstName ?? ''} ${lastName ?? ''}'.trim(),
+                ),
+              if (email != null) _buildInfoItem('Email', email),
+              if (phone != null) _buildInfoItem('Phone', phone),
+              if (dob != null) _buildInfoItem('Birthdate', dob),
+              if (gender != null) _buildInfoItem('Gender', gender),
+              if (_user != null && _user!.containsKey('Nationality'))
+                _buildInfoItem(
+                  'Nationality',
+                  _user!['Nationality']?.toString() ?? '',
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.amberAccent,
+            foregroundColor: Colors.black,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 14.0),
+          ),
+          onPressed: _logout,
+          child: const Text('Logout'),
+        ),
+      ],
     );
   }
 
@@ -99,94 +197,43 @@ class _MyAccountDetailsPageState extends State<MyAccountDetailsPage> {
     final gender = _readField(['Gender', 'gender']);
 
     return Scaffold(
+      backgroundColor: const Color(0xFF1E3A8A),
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text('My Account'),
-        backgroundColor: const Color(0xFF111827),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _error != null
-              ? Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _error!,
-                      style: const TextStyle(color: Colors.red),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (_) => const LoginPage()),
-                        );
-                      },
-                      child: const Text('Login'),
-                    ),
-                  ],
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 5,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Your profile',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          if (firstName != null || lastName != null)
-                            _buildInfoItem(
-                              'Name',
-                              '${firstName ?? ''} ${lastName ?? ''}'.trim(),
-                            ),
-                          if (email != null) _buildInfoItem('Email', email),
-                          if (phone != null) _buildInfoItem('Phone', phone),
-                          if (dob != null) _buildInfoItem('Birthdate', dob),
-                          if (gender != null) _buildInfoItem('Gender', gender),
-                          if (_user != null &&
-                              _user!.containsKey('Nationality'))
-                            _buildInfoItem(
-                              'Nationality',
-                              _user!['Nationality']?.toString() ?? '',
-                            ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF111827),
-                      ),
-                      onPressed: _logout,
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 14.0),
-                        child: Text('Logout'),
-                      ),
-                    ),
-                  ],
-                ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF000000), Color(0xFF111827), Color(0xFF1E3A8A)],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: MediaQuery.of(context).padding.top + 16,
+              bottom: MediaQuery.of(context).padding.bottom + 16,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(0),
+              child: _buildContent(
+                firstName: firstName,
+                lastName: lastName,
+                email: email,
+                phone: phone,
+                dob: dob,
+                gender: gender,
+              ),
+            ),
+          ),
         ),
       ),
     );
