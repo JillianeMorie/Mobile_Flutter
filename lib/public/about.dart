@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ticketing_flutter/public/bookpage.dart';
+import 'package:ticketing_flutter/public/book.dart';
 
 class About extends StatefulWidget {
   const About({super.key});
@@ -103,7 +104,7 @@ class _About extends State<About> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const FlightBookingApp(),
+                                builder: (context) => const Book(),
                               ),
                             );
                           },
@@ -171,12 +172,12 @@ class _About extends State<About> {
                     const SizedBox(height: 10),
                     _buildContactRow(
                       Icons.email_outlined,
-                      "support@airlinesticketing.com",
+                      "airlinesticketing@gmail.com",
                     ),
-                    _buildContactRow(Icons.phone_outlined, "+63 900 123 4567"),
+                    _buildContactRow(Icons.phone_outlined, "+63 912 345 6789"),
                     _buildContactRow(
                       Icons.location_on_outlined,
-                      "Makati City, Philippines",
+                      "ACLC College of Mandaue",
                     ),
                     const SizedBox(height: 40),
                     Padding(
