@@ -12,7 +12,6 @@ import 'package:ticketing_flutter/public/manage/manage.dart';
 import 'package:ticketing_flutter/public/bookpage.dart';
 import 'package:ticketing_flutter/public/my_account_details.dart';
 import 'package:ticketing_flutter/services/user_service.dart';
-import 'package:ticketing_flutter/public/home.dart';
 
 import 'dart:async';
 
@@ -331,20 +330,15 @@ class _Book extends State<Book> {
               },
             ),
             ListTile(
-              leading: Icon(
-                _isLoggedIn ? Icons.person : Icons.login,
-                color: Colors.white,
-              ),
-              title: Text(
-                _isLoggedIn ? 'My Account Details' : 'Login',
-                style: const TextStyle(color: Colors.white),
-              ),
+              leading: const Icon(Icons.login, color: Colors.white),
+              title: const Text('Login', style: TextStyle(color: Colors.white)),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
                   PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) => _isLoggedIn
+                    pageBuilder: (context, animation1, animation2) =>
+                        _isLoggedIn
                         ? const MyAccountDetailsPage()
                         : const LoginPage(),
                     transitionDuration: Duration.zero,
@@ -352,23 +346,6 @@ class _Book extends State<Book> {
                 );
               },
             ),
-            if (_isLoggedIn)
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.white),
-                title:
-                    const Text('Logout', style: TextStyle(color: Colors.white)),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await UserService().logout();
-                  if (!mounted) return;
-                  setState(() => _isLoggedIn = false);
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (_) => const Home()),
-                    (route) => false,
-                  );
-                },
-              ),
           ],
         ),
       ),

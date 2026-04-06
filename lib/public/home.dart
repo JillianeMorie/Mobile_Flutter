@@ -327,8 +327,8 @@ class _HomeState extends State<Home> {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     curve: Curves.easeInOut,
-                    height: 60,
-                    width: _isGetStartedPressed ? 320 : 300,
+                    height: 50,
+                    width: _isGetStartedPressed ? 270 : 250,
                     padding: EdgeInsets.symmetric(
                       horizontal: _isGetStartedPressed ? 24 : 20,
                     ),
@@ -363,7 +363,7 @@ class _HomeState extends State<Home> {
                               ? Colors.blue.shade200
                               : Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: _isGetStartedPressed ? 32 : 30,
+                          fontSize: _isGetStartedPressed ? 28 : 26,
                         ),
                         child: const Text('GET STARTED'),
                       ),
@@ -406,7 +406,7 @@ class _HomeState extends State<Home> {
                     duration: const Duration(milliseconds: 200),
                     curve: Curves.easeInOut,
                     height: 50,
-                    width: _isLoginPressed ? 240 : 220,
+                    width: _isLoginPressed ? 270 : 250,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
                       color: Colors.transparent,
@@ -430,7 +430,7 @@ class _HomeState extends State<Home> {
                               ? Colors.blue.shade200
                               : Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: _isLoginPressed ? 20 : 18,
+                          fontSize: _isLoginPressed ? 28 : 26,
                         ),
                         child: const Text('LOGIN'),
                       ),
