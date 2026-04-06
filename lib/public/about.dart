@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:ticketing_flutter/public/bookpage.dart';
 import 'package:ticketing_flutter/public/book.dart';
+import 'package:ticketing_flutter/public/explore.dart';
+import 'package:ticketing_flutter/public/travel_info.dart';
+import 'package:ticketing_flutter/public/manage/manage.dart';
+import 'package:ticketing_flutter/auth/login.dart';
 
 class About extends StatefulWidget {
   const About({super.key});
@@ -10,10 +14,120 @@ class About extends StatefulWidget {
 }
 
 class _About extends State<About> {
+  Widget _drawerItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.white),
+      title: Text(label, style: const TextStyle(color: Colors.white)),
+      onTap: () {
+        Navigator.pop(context);
+        onTap();
+      },
+    );
+  }
+
+  void _nav(Widget page) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => page,
+        transitionDuration: Duration.zero,
+      ),
+    );
+  }
+
+  void _navReplace(Widget page) {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => page,
+        transitionDuration: Duration.zero,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF000000), Color(0xFF111827), Color(0xFF1E3A8A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        drawer: Drawer(
+          width: 300,
+          backgroundColor: const Color(0xFF111827),
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              const DrawerHeader(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF000000),
+                      Color(0xFF111827),
+                      Color(0xFF1E3A8A),
+                    ],
+                  ),
+                ),
+                child: Text(
+                  'Menu',
+                  style: TextStyle(color: Colors.white, fontSize: 24),
+                ),
+              ),
+              _drawerItem(
+                icon: Icons.flight,
+                label: 'Book',
+                onTap: () => _navReplace(const FlightBookingApp()),
+              ),
+              _drawerItem(
+                icon: Icons.manage_accounts,
+                label: 'Manage',
+                onTap: () => _nav(const ManagePage()),
+              ),
+              _drawerItem(
+                icon: Icons.info,
+                label: 'Travel Info',
+                onTap: () => _nav(const TravelInfoPage()),
+              ),
+              _drawerItem(
+                icon: Icons.explore,
+                label: 'Explore',
+                onTap: () => _nav(const ExplorePage()),
+              ),
+              _drawerItem(
+                icon: Icons.home,
+                label: 'About',
+                onTap: () => _navReplace(const About()),
+              ),
+              _drawerItem(
+                icon: Icons.login,
+                label: 'Login',
+                onTap: () => _nav(const LoginPage()),
+              ),
+            ],
+          ),
+        ),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+            ),
+          ),
+        ),
+        body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF000000), Color(0xFF111827), Color(0xFF1E3A8A)],
@@ -193,6 +307,7 @@ class _About extends State<About> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

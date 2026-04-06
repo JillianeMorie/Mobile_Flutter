@@ -10,8 +10,6 @@ import 'package:ticketing_flutter/public/explore.dart';
 import 'package:ticketing_flutter/public/travel_info.dart';
 import 'package:ticketing_flutter/public/manage/manage.dart';
 import 'package:ticketing_flutter/public/bookpage.dart';
-import 'package:ticketing_flutter/public/my_account_details.dart';
-import 'package:ticketing_flutter/services/user_service.dart';
 
 import 'dart:async';
 
@@ -37,23 +35,14 @@ class _Book extends State<Book> {
   int _departurePrice = 2000; // Default price below Departure
 
   bool _isSearchPressed = false;
-  bool _isLoggedIn = false;
-
   @override
   void initState() {
     super.initState();
     box7Controller.text = "${_adults + _children + _infants} Passengers";
     box8Controller.text = _selectedClass;
     _calculatePrice(); // Calculate price initially
-    _loadLoginState();
 
     // auto-sliding info bar setup
-  }
-
-  Future<void> _loadLoginState() async {
-    final logged = await UserService().isLoggedIn();
-    if (!mounted) return;
-    setState(() => _isLoggedIn = logged);
   }
 
   // New function to centralize price calculation
@@ -338,9 +327,7 @@ class _Book extends State<Book> {
                   context,
                   PageRouteBuilder(
                     pageBuilder: (context, animation1, animation2) =>
-                        _isLoggedIn
-                        ? const MyAccountDetailsPage()
-                        : const LoginPage(),
+                        const LoginPage(),
                     transitionDuration: Duration.zero,
                   ),
                 );

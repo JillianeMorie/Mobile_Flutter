@@ -1,27 +1,137 @@
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/public/bookpage.dart';
+import 'package:ticketing_flutter/public/about.dart';
+import 'package:ticketing_flutter/public/explore.dart';
+import 'package:ticketing_flutter/public/manage/manage.dart';
+import 'package:ticketing_flutter/auth/login.dart';
 
-class TravelInfoPage extends StatelessWidget {
+class TravelInfoPage extends StatefulWidget {
   const TravelInfoPage({super.key});
 
   @override
+  State<TravelInfoPage> createState() => _TravelInfoPageState();
+}
+
+class _TravelInfoPageState extends State<TravelInfoPage> {
+  Widget _drawerItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.white),
+      title: Text(label, style: const TextStyle(color: Colors.white)),
+      onTap: () {
+        Navigator.pop(context);
+        onTap();
+      },
+    );
+  }
+
+  void _nav(Widget page) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => page,
+        transitionDuration: Duration.zero,
+      ),
+    );
+  }
+
+  void _navReplace(Widget page) {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => page,
+        transitionDuration: Duration.zero,
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true, // Ensures background covers full screen
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF000000), Color(0xFF111827), Color(0xFF1E3A8A)],
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF000000), Color(0xFF111827), Color(0xFF1E3A8A)],
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        drawer: Drawer(
+          width: 300,
+          backgroundColor: const Color(0xFF111827),
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              const DrawerHeader(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF000000),
+                      Color(0xFF111827),
+                      Color(0xFF1E3A8A),
+                    ],
+                  ),
+                ),
+                child: Text(
+                  'Menu',
+                  style: TextStyle(color: Colors.white, fontSize: 24),
+                ),
+              ),
+              _drawerItem(
+                icon: Icons.flight,
+                label: 'Book',
+                onTap: () => _navReplace(const FlightBookingApp()),
+              ),
+              _drawerItem(
+                icon: Icons.manage_accounts,
+                label: 'Manage',
+                onTap: () => _nav(const ManagePage()),
+              ),
+              _drawerItem(
+                icon: Icons.info,
+                label: 'Travel Info',
+                onTap: () => _navReplace(const TravelInfoPage()),
+              ),
+              _drawerItem(
+                icon: Icons.explore,
+                label: 'Explore',
+                onTap: () => _nav(const ExplorePage()),
+              ),
+              _drawerItem(
+                icon: Icons.home,
+                label: 'About',
+                onTap: () => _nav(const About()),
+              ),
+              _drawerItem(
+                icon: Icons.login,
+                label: 'Login',
+                onTap: () => _nav(const LoginPage()),
+              ),
+            ],
           ),
         ),
-        child: SafeArea(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+            ),
+          ),
+        ),
+        body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(18.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                // Header Title
                 const Text(
                   'Travel Information',
                   style: TextStyle(
@@ -36,15 +146,12 @@ class TravelInfoPage extends StatelessWidget {
                   style: TextStyle(fontSize: 14, color: Colors.white70),
                 ),
                 const SizedBox(height: 25),
-
-                // --- Sections ---
                 _buildCheckInSection(),
                 _buildBaggageSection(),
                 _buildBookingSection(),
                 _buildPaymentSection(),
                 _buildTravelAdvisoriesSection(),
                 _buildAirplanePoliciesSection(),
-
                 const SizedBox(height: 40),
                 _buildFooter(),
               ],

@@ -5,8 +5,6 @@ import 'package:ticketing_flutter/public/explore.dart';
 import 'package:ticketing_flutter/public/travel_info.dart';
 import 'package:ticketing_flutter/public/manage/manage.dart';
 import 'package:ticketing_flutter/auth/login.dart';
-import 'package:ticketing_flutter/public/my_account_details.dart';
-import 'package:ticketing_flutter/services/user_service.dart';
 
 // --- CEBU PACIFIC INSPIRED COLOR PALETTE ---
 const Color cebPrimaryBlue = Color(0xFF15A7E0);
@@ -59,7 +57,6 @@ class BookPage extends StatefulWidget {
 }
 
 class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
-  bool _isLoggedIn = false;
   late TabController _tabController;
 
   @override
@@ -67,13 +64,6 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_handleTabChange);
-    _loadLoginState();
-  }
-
-  Future<void> _loadLoginState() async {
-    final logged = await UserService().isLoggedIn();
-    if (!mounted) return;
-    setState(() => _isLoggedIn = logged);
   }
 
   void _handleTabChange() {
@@ -150,25 +140,10 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
               ),
 
               _drawerItem(
-                icon: _isLoggedIn ? Icons.person : Icons.login,
-                label: _isLoggedIn ? 'My Account Details' : 'Login',
-                onTap: () => _nav(
-                  _isLoggedIn
-                      ? const MyAccountDetailsPage()
-                      : const LoginPage(),
-                ),
+                icon: Icons.login,
+                label: 'Login',
+                onTap: () => _nav(const LoginPage()),
               ),
-
-              if (_isLoggedIn)
-                _drawerItem(
-                  icon: Icons.logout,
-                  label: 'Logout',
-                  onTap: () async {
-                    await UserService().logout();
-                    setState(() => _isLoggedIn = false);
-                    _navReplace(const FlightBookingApp());
-                  },
-                ),
             ],
           ),
         ),

@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/public/bookpage.dart';
+import 'package:ticketing_flutter/public/about.dart';
+import 'package:ticketing_flutter/public/explore.dart';
+import 'package:ticketing_flutter/public/travel_info.dart';
+import 'package:ticketing_flutter/auth/login.dart';
 
 class ManagePage extends StatefulWidget {
   const ManagePage({super.key});
@@ -8,6 +13,41 @@ class ManagePage extends StatefulWidget {
 }
 
 class _ManagePageState extends State<ManagePage> {
+  Widget _drawerItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.white),
+      title: Text(label, style: const TextStyle(color: Colors.white)),
+      onTap: () {
+        Navigator.pop(context);
+        onTap();
+      },
+    );
+  }
+
+  void _nav(Widget page) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => page,
+        transitionDuration: Duration.zero,
+      ),
+    );
+  }
+
+  void _navReplace(Widget page) {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => page,
+        transitionDuration: Duration.zero,
+      ),
+    );
+  }
+
   void _showCheckInContent() {
     showDialog(
       context: context,
@@ -305,19 +345,83 @@ class _ManagePageState extends State<ManagePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF1E3A8A),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF000000), Color(0xFF111827), Color(0xFF1E3A8A)],
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF000000), Color(0xFF111827), Color(0xFF1E3A8A)],
+        ),
+      ),
+      child: Scaffold(
+        drawer: Drawer(
+          width: 300,
+          backgroundColor: const Color(0xFF111827),
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              const DrawerHeader(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF000000),
+                      Color(0xFF111827),
+                      Color(0xFF1E3A8A),
+                    ],
+                  ),
+                ),
+                child: Text(
+                  'Menu',
+                  style: TextStyle(color: Colors.white, fontSize: 24),
+                ),
+              ),
+              _drawerItem(
+                icon: Icons.flight,
+                label: 'Book',
+                onTap: () => _navReplace(const FlightBookingApp()),
+              ),
+              _drawerItem(
+                icon: Icons.manage_accounts,
+                label: 'Manage',
+                onTap: () => _navReplace(const ManagePage()),
+              ),
+              _drawerItem(
+                icon: Icons.info,
+                label: 'Travel Info',
+                onTap: () => _nav(const TravelInfoPage()),
+              ),
+              _drawerItem(
+                icon: Icons.explore,
+                label: 'Explore',
+                onTap: () => _nav(const ExplorePage()),
+              ),
+              _drawerItem(
+                icon: Icons.home,
+                label: 'About',
+                onTap: () => _nav(const About()),
+              ),
+              _drawerItem(
+                icon: Icons.login,
+                label: 'Login',
+                onTap: () => _nav(const LoginPage()),
+              ),
+            ],
           ),
         ),
-        child: SingleChildScrollView(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        body: SingleChildScrollView(
           padding: EdgeInsets.only(
             left: 20,
             right: 20,
