@@ -230,7 +230,7 @@ class _FlightBundlesPageState extends State<FlightBundlesPage> {
                                           final loggedIn = await userService
                                               .isLoggedIn();
                                           final routeWidget = loggedIn
-                                              ? UserBookingDetailsPage(
+                                              ? GuestDetailsPage(
                                                   flight: widget.flight,
                                                   bundle: bundle,
                                                   adults: widget.adults,

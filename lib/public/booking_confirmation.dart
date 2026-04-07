@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -7,6 +10,52 @@ import 'package:ticketing_flutter/public/home.dart';
 import 'package:ticketing_flutter/auth/register.dart';
 
 class BookingConfirmationPage extends StatelessWidget {
+  Future<void> _downloadQrCode(BuildContext context, String qrData) async {
+    try {
+      final qrValidationResult = QrValidator.validate(
+        data: qrData,
+        version: QrVersions.auto,
+        errorCorrectionLevel: QrErrorCorrectLevel.L,
+      );
+      if (qrValidationResult.status == QrValidationStatus.valid) {
+        final qrCode = qrValidationResult.qrCode;
+        final painter = QrPainter.withQr(
+          qr: qrCode!,
+          color: const Color(0xFF000000),
+          emptyColor: const Color(0xFFFFFFFF),
+          gapless: true,
+        );
+        final picData = await painter.toImageData(
+          800,
+          format: ui.ImageByteFormat.png,
+        );
+        if (picData != null) {
+          final result = await ImageGallerySaver.saveImage(
+            Uint8List.view(picData.buffer),
+            quality: 100,
+            name: "booking_qr_${DateTime.now().millisecondsSinceEpoch}",
+          );
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('QR code saved to gallery!')),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to save QR code: '
+              '${e.toString()}',
+            ),
+          ),
+        );
+      }
+    }
+  }
+
   final Flight flight;
   final Map<String, dynamic> bundle;
   final List<Map<String, dynamic>> guests;
@@ -462,82 +511,153 @@ class BookingConfirmationPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       // Generate QR code button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.blueAccent),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                backgroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                title: const Text(
-                                  "Boarding QR Code",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                content: SizedBox(
-                                  width: 260,
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      SizedBox(
-                                        width: 220,
-                                        height: 220,
-                                        child: QrImageView(
-                                          data: qrData,
-                                          version: QrVersions.auto,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        "Booking Ref: $bookingRef",
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      const Text(
-                                        "Show this QR code at the airport for faster check‑in.",
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(fontSize: 12),
-                                      ),
-                                    ],
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SizedBox(
+                              height: 48,
+                              child: OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(
+                                    color: Colors.blueAccent,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(),
-                                    child: const Text("Close"),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      backgroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      title: const Text(
+                                        "Boarding QR Code",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      content: SizedBox(
+                                        width: 260,
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            SizedBox(
+                                              width: 220,
+                                              height: 220,
+                                              child: QrImageView(
+                                                data: qrData,
+                                                version: QrVersions.auto,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              "Booking Ref: $bookingRef",
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            const Text(
+                                              "Show this QR code at the airport for faster check‑in.",
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(fontSize: 12),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            SizedBox(
+                                              width: double.infinity,
+                                              child: OutlinedButton.icon(
+                                                style: OutlinedButton.styleFrom(
+                                                  side: const BorderSide(
+                                                    color: Colors.green,
+                                                  ),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          12,
+                                                        ),
+                                                  ),
+                                                ),
+                                                onPressed: () =>
+                                                    _downloadQrCode(
+                                                      context,
+                                                      qrData,
+                                                    ),
+                                                icon: const Icon(
+                                                  Icons.download,
+                                                  color: Colors.green,
+                                                ),
+                                                label: const Text(
+                                                  "Download QR",
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.green,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(),
+                                          child: const Text("Close"),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(
+                                  Icons.qr_code_2,
+                                  color: Colors.blueAccent,
+                                ),
+                                label: const Text(
+                                  "Generate QR Code",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.blueAccent,
                                   ),
-                                ],
+                                ),
                               ),
-                            );
-                          },
-                          icon: const Icon(
-                            Icons.qr_code_2,
-                            color: Colors.blueAccent,
-                          ),
-                          label: const Text(
-                            "Generate QR Code",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.blueAccent,
                             ),
                           ),
-                        ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: SizedBox(
+                              height: 48,
+                              child: OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(color: Colors.green),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                onPressed: () =>
+                                    _downloadQrCode(context, qrData),
+                                icon: const Icon(
+                                  Icons.download,
+                                  color: Colors.green,
+                                ),
+                                label: const Text(
+                                  "Download QR",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
                       Center(
