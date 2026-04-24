@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -30,7 +30,7 @@ class BookingConfirmationPage extends StatelessWidget {
           format: ui.ImageByteFormat.png,
         );
         if (picData != null) {
-          final result = await ImageGallerySaver.saveImage(
+          final result = await ImageGallerySaverPlus.saveImage(
             Uint8List.view(picData.buffer),
             quality: 100,
             name: "booking_qr_${DateTime.now().millisecondsSinceEpoch}",

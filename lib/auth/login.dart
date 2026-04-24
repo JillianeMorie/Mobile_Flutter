@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ticketing_flutter/auth/register.dart';
 import 'package:ticketing_flutter/services/user_service.dart';
 import 'package:ticketing_flutter/public/home.dart';
-import 'package:ticketing_flutter/user/user_board.dart';
+import 'package:ticketing_flutter/user/user_book.dart';
 //import 'package:ticketing_flutter/admin/admin_dashboard.dart';
 
 class LoginPage extends StatefulWidget {
@@ -229,7 +229,7 @@ class _LoginPageState extends State<LoginPage> {
           if (mounted) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const Book()),
+              MaterialPageRoute(builder: (context) => const UserBook()),
             );
           }
         }

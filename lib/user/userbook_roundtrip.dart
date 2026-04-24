@@ -1,39 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:ticketing_flutter/public/book_oneway.dart';
-import 'package:ticketing_flutter/public/book_roundtrip.dart';
-import 'package:ticketing_flutter/public/book_multicity.dart';
-import 'package:ticketing_flutter/public/search_flight.dart';
+import 'package:ticketing_flutter/user/userbook_oneway.dart';
+import 'package:ticketing_flutter/user/userbook_multicity.dart';
+import 'package:ticketing_flutter/public/roundtrip_flight.dart';
 import 'package:ticketing_flutter/auth/login.dart';
 import 'package:ticketing_flutter/services/countries.dart';
-import 'package:ticketing_flutter/public/about.dart';
+import 'package:ticketing_flutter/public/home.dart';
 import 'package:ticketing_flutter/user/account_details.dart';
-import 'package:ticketing_flutter/public/explore.dart';
-import 'package:ticketing_flutter/public/travel_info.dart';
-import 'package:ticketing_flutter/public/manage/manage.dart';
-import 'package:ticketing_flutter/public/bookpage.dart';
 
-import 'dart:async';
-
-class Book extends StatefulWidget {
-  const Book({super.key});
+class UserBookRoundtrip extends StatefulWidget {
+  const UserBookRoundtrip({super.key});
 
   @override
-  State<Book> createState() => _Book();
+  State<UserBookRoundtrip> createState() => _UserBookRoundtrip();
 }
 
-class _Book extends State<Book> {
+class _UserBookRoundtrip extends State<UserBookRoundtrip> {
   final TextEditingController box4Controller = TextEditingController();
   final TextEditingController box5Controller = TextEditingController();
   final TextEditingController box6Controller = TextEditingController();
   final TextEditingController box7Controller = TextEditingController();
   final TextEditingController box8Controller = TextEditingController();
+  final TextEditingController box9Controller = TextEditingController();
+
+  int _departurePrice = 10000;
+  int _arrivalPrice = 10000;
+  int get _totalPrice => _departurePrice + _arrivalPrice;
 
   int _adults = 1;
   int _children = 0;
   int _infants = 0;
   String _selectedClass = "Economy";
-  int _selectedPrice = 0;
-  int _departurePrice = 2000; // Default price below Departure
 
   bool _isSearchPressed = false;
 
@@ -42,16 +38,14 @@ class _Book extends State<Book> {
     super.initState();
     box7Controller.text = "${_adults + _children + _infants} Passengers";
     box8Controller.text = _selectedClass;
-    _calculatePrice(); // Calculate price initially
-
-    // auto-sliding info bar setup
+    _calculatePrice();
   }
 
-  // New function to centralize price calculation
   void _calculatePrice() {
     if (box6Controller.text.isNotEmpty) {
+      DateTime today = DateTime.now();
       DateTime pickedDate = DateTime.parse(box6Controller.text);
-      int daysDiff = pickedDate.difference(DateTime.now()).inDays;
+      int daysDiff = pickedDate.difference(today).inDays;
 
       int basePrice = 10000 - (daysDiff * 100);
       if (basePrice < 2000) basePrice = 2000;
@@ -59,17 +53,39 @@ class _Book extends State<Book> {
       double multiplier = 1.0;
       if (_selectedClass == "Business") {
         multiplier = 3.0;
-      } else if (_selectedClass == "First Class")
+      } else if (_selectedClass == "First Class") {
         multiplier = 6.0;
+      }
 
-      _selectedPrice =
+      _departurePrice =
           ((basePrice * _adults +
                       (basePrice * 0.75 * _children).round() +
                       (basePrice * 0.10 * _infants).round()) *
                   multiplier)
               .round();
-    } else {
-      _selectedPrice = 2000;
+    }
+
+    if (box9Controller.text.isNotEmpty) {
+      DateTime today = DateTime.now();
+      DateTime pickedDate = DateTime.parse(box9Controller.text);
+      int daysDiff = pickedDate.difference(today).inDays;
+
+      int basePrice = 10000 - (daysDiff * 100);
+      if (basePrice < 2000) basePrice = 2000;
+
+      double multiplier = 1.0;
+      if (_selectedClass == "Business") {
+        multiplier = 3.0;
+      } else if (_selectedClass == "First Class") {
+        multiplier = 6.0;
+      }
+
+      _arrivalPrice =
+          ((basePrice * _adults +
+                      (basePrice * 0.75 * _children).round() +
+                      (basePrice * 0.10 * _infants).round()) *
+                  multiplier)
+              .round();
     }
   }
 
@@ -115,15 +131,11 @@ class _Book extends State<Book> {
                       onPressed: () {
                         final total = _adults + _children + _infants;
                         box7Controller.text = "$total Passengers";
-
-                        // Update total price
                         this.setState(() {
                           _calculatePrice();
                         });
-
                         Navigator.pop(context);
                       },
-
                       child: const Text('Done'),
                     ),
                   ),
@@ -196,7 +208,6 @@ class _Book extends State<Book> {
         setState(() {
           _selectedClass = className;
           box8Controller.text = _selectedClass;
-          // Recalculate price based on class
           _calculatePrice();
         });
         Navigator.pop(context);
@@ -241,14 +252,6 @@ class _Book extends State<Book> {
               title: const Text('Book', style: TextStyle(color: Colors.white)),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) =>
-                        const FlightBookingApp(),
-                    transitionDuration: Duration.zero,
-                  ),
-                );
               },
             ),
             ListTile(
@@ -259,14 +262,6 @@ class _Book extends State<Book> {
               ),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) =>
-                        const ManagePage(),
-                    transitionDuration: Duration.zero,
-                  ),
-                );
               },
             ),
             ListTile(
@@ -277,14 +272,6 @@ class _Book extends State<Book> {
               ),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) =>
-                        const TravelInfoPage(),
-                    transitionDuration: Duration.zero,
-                  ),
-                );
               },
             ),
             ListTile(
@@ -295,14 +282,6 @@ class _Book extends State<Book> {
               ),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) =>
-                        const ExplorePage(),
-                    transitionDuration: Duration.zero,
-                  ),
-                );
               },
             ),
             ListTile(
@@ -310,14 +289,6 @@ class _Book extends State<Book> {
               title: const Text('About', style: TextStyle(color: Colors.white)),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) =>
-                        const About(),
-                    transitionDuration: Duration.zero,
-                  ),
-                );
               },
             ),
             ListTile(
@@ -344,7 +315,7 @@ class _Book extends State<Book> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final screenHeight = constraints.maxHeight;
-          final boxHeight = 500.0;
+          final boxHeight = 605.0;
           final boxWidth = 330.0;
           final boxTop = (screenHeight / 2) - (boxHeight / 2);
           final screenWidth = MediaQuery.of(context).size.width;
@@ -398,6 +369,23 @@ class _Book extends State<Book> {
                 ),
               ),
               Positioned(
+                top: boxTop - 45,
+                left: boxLeft,
+                child: SizedBox(
+                  width: boxWidth,
+                  child: Center(
+                    child: Text(
+                      'Where do you want to fly?',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 129, 150, 207),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
                 top: boxTop,
                 left: boxLeft,
                 child: Container(
@@ -424,21 +412,17 @@ class _Book extends State<Book> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             GestureDetector(
-                              onTap: () =>
-                                  _navigateToPage("Box 1", const BookOneway()),
+                              onTap: () => _navigateToPage(
+                                "Box 1",
+                                const UserBookOneway(),
+                              ),
                               child: buildClickableBox("One-way"),
                             ),
-                            GestureDetector(
-                              onTap: () => _navigateToPage(
-                                "Box 2",
-                                const BookRoundtrip(),
-                              ),
-                              child: buildClickableBox("Roundtrip"),
-                            ),
+                            buildClickableBox("Roundtrip", isSelected: true),
                             GestureDetector(
                               onTap: () => _navigateToPage(
                                 "Box 3",
-                                const BookMulticity(),
+                                const UserBookMulticity(),
                               ),
                               child: buildClickableBox("Multi-City"),
                             ),
@@ -452,56 +436,59 @@ class _Book extends State<Book> {
                             buildAutocompleteField("To", box5Controller),
                             const SizedBox(height: 12),
                             buildDatePickerField("Departure", box6Controller),
+                            const SizedBox(height: 12),
+                            buildDatePickerField("Arrival", box9Controller),
                           ],
                         ),
                         const SizedBox(height: 12),
-                        Column(
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    buildInputBox(
-                                      "Passengers",
-                                      box7Controller,
-                                      width: 140,
-                                      readOnly: true,
-                                    ),
-                                    buildInputBox(
-                                      "Class",
-                                      box8Controller,
-                                      width: 140,
-                                      readOnly: true,
-                                    ),
-                                  ],
-                                ),
-                                // 🔹 Show total price only if the user has selected passengers
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    top: 6,
-                                    left: 8,
-                                  ),
-                                  child: Text(
-                                    'Total Price: ${box6Controller.text.isEmpty ? '--' : '₱$_selectedPrice'}',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF1E3A8A),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            buildInputBox(
+                              "Passengers",
+                              box7Controller,
+                              width: 140,
+                              readOnly: true,
                             ),
-
-                            // 🔹 Show total price only after passengers are selected
+                            buildInputBox(
+                              "Class",
+                              box8Controller,
+                              width: 140,
+                              readOnly: true,
+                            ),
                           ],
                         ),
 
-                        const SizedBox(height: 15),
-                        // 🔹 Updated Search Button
+                        const SizedBox(height: 12),
+
+                        // 🟩 Add total price display here
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: Row(
+                            children: [
+                              const Text(
+                                "Total Price:",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF1E3A8A),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                "₱$_totalPrice",
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1E3A8A),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
                         GestureDetector(
                           onTapDown: (_) {
                             setState(() => _isSearchPressed = true);
@@ -509,10 +496,10 @@ class _Book extends State<Book> {
                           onTapUp: (_) {
                             setState(() => _isSearchPressed = false);
 
-                            // Validation: Check if all required fields are filled
                             if (box4Controller.text.isEmpty ||
                                 box5Controller.text.isEmpty ||
-                                box6Controller.text.isEmpty) {
+                                box6Controller.text.isEmpty ||
+                                box9Controller.text.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text(
@@ -525,7 +512,6 @@ class _Book extends State<Book> {
                               return;
                             }
 
-                            // Validate that both country and city are selected for From/To fields
                             bool isFromValid = box4Controller.text.contains(
                               " - ",
                             );
@@ -544,51 +530,19 @@ class _Book extends State<Book> {
                               return;
                             }
 
-                            Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                transitionDuration: Duration.zero,
-                                reverseTransitionDuration: Duration.zero,
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) =>
-                                        SearchFlightsPage(
-                                          from: box4Controller.text,
-                                          to: box5Controller.text,
-                                          departureDate: box6Controller.text,
-                                          adults: _adults,
-                                          children: _children,
-                                          infants: _infants,
-                                        ),
-                                settings: RouteSettings(
-                                  arguments: {
-                                    'selectedPrice': _selectedPrice.toDouble(),
-                                    'selectedClass': _selectedClass,
-                                  },
-                                ),
-                              ),
-                            );
+                            _navigateToPage("Box 9", const Home());
                           },
                           onTapCancel: () {
                             setState(() => _isSearchPressed = false);
                           },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
-                            width: double.infinity, // w-full
-                            height: 56, // h-14
+                            width: double.infinity,
+                            height: 56,
                             decoration: BoxDecoration(
                               color: _isSearchPressed
-                                  ? const Color.fromARGB(
-                                      255,
-                                      53,
-                                      56,
-                                      58,
-                                    ) // Slightly darker when pressed
-                                  : const Color.fromARGB(
-                                      255,
-                                      5,
-                                      23,
-                                      37,
-                                    ), // Same as lower drawer half
+                                  ? const Color.fromARGB(255, 53, 56, 58)
+                                  : const Color.fromARGB(255, 5, 23, 37),
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
@@ -599,20 +553,19 @@ class _Book extends State<Book> {
                                 ),
                               ],
                             ),
-                            child: Row(
+                            child: const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.search,
                                   color: Colors.white,
                                   size: 20,
                                 ),
-                                const SizedBox(width: 8),
-                                const Text(
+                                SizedBox(width: 8),
+                                Text(
                                   'Search Flights',
                                   style: TextStyle(
-                                    color: Colors
-                                        .white, // Black text for visibility
+                                    color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
                                   ),
@@ -627,24 +580,7 @@ class _Book extends State<Book> {
                 ),
               ),
               Positioned(
-                top: boxTop - 45, // 40 pixels above the box
-                left: boxLeft,
-                child: SizedBox(
-                  width: boxWidth,
-                  child: Center(
-                    child: Text(
-                      'Where do you want to fly?',
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 129, 150, 207),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: 49, // adjust as you like
+                bottom: 49,
                 left: 0,
                 right: 0,
                 child: Center(
@@ -670,8 +606,6 @@ class _Book extends State<Book> {
                   ),
                 ),
               ),
-
-              // BELOW the main white box
             ],
           );
         },
@@ -691,20 +625,18 @@ class _Book extends State<Book> {
       ),
       child: RawAutocomplete<String>(
         optionsBuilder: (TextEditingValue textEditingValue) {
+          String input = textEditingValue.text.toLowerCase();
           List<String> options = [];
 
-          // Check if the input is a country name (exact match)
           bool isExactCountry = countries1.contains(textEditingValue.text);
           if (isExactCountry) {
-            // User has selected a country, show cities for that country
             String countryName = textEditingValue.text;
             if (countryCities.containsKey(countryName)) {
               List<String> cities = countryCities[countryName]!;
               for (String city in cities) {
-                options.add(city); // Just show city names, not "Country - City"
+                options.add(city);
               }
 
-              // Exclude the option selected in the other field
               if (controller == box4Controller &&
                   box5Controller.text.isNotEmpty) {
                 options = options
@@ -721,10 +653,8 @@ class _Book extends State<Book> {
             }
           }
 
-          // If input is empty or not an exact country match, show countries
           List<String> countryOptions = List<String>.from(countries1);
 
-          // Exclude the option selected in the other field
           if (controller == box4Controller && box5Controller.text.isNotEmpty) {
             countryOptions = countryOptions
                 .where((c) => c != box5Controller.text)
@@ -740,7 +670,6 @@ class _Book extends State<Book> {
         },
         fieldViewBuilder:
             (context, textEditingController, focusNode, onFieldSubmitted) {
-              // Update the controller when this widget is first built
               if (controller.text.isNotEmpty) {
                 textEditingController.text = controller.text;
               }
@@ -753,12 +682,10 @@ class _Book extends State<Book> {
                   border: InputBorder.none,
                 ),
                 onTap: () {
-                  // This will force the options to show immediately when field is tapped
                   textEditingController.selection = TextSelection(
                     baseOffset: 0,
                     extentOffset: textEditingController.text.length,
                   );
-                  // Trigger the options to show by simulating a change
                   focusNode.requestFocus();
                 },
                 onChanged: (value) {
@@ -785,21 +712,15 @@ class _Book extends State<Book> {
                     return InkWell(
                       onTap: () {
                         if (countryCities.containsKey(option)) {
-                          // If it's a country, show its cities in the dropdown
                           setState(() {
-                            // Replace the current text with the selected country
                             controller.text = option;
                           });
 
-                          // Update the autocomplete field’s options to that country's cities
                           Future.delayed(const Duration(milliseconds: 100), () {
-                            FocusScope.of(context).requestFocus(
-                              FocusNode(),
-                            ); // close current dropdown
+                            FocusScope.of(context).requestFocus(FocusNode());
                             Future.delayed(
                               const Duration(milliseconds: 100),
                               () {
-                                // reopen autocomplete with city options
                                 showDialog(
                                   context: context,
                                   builder: (BuildContext context) {
@@ -826,12 +747,10 @@ class _Book extends State<Book> {
                             );
                           });
                         } else {
-                          // If it's already a city, just select it
                           onSelected(option);
                           controller.text = option;
                         }
                       },
-
                       child: Container(
                         padding: const EdgeInsets.all(16.0),
                         child: Text(option),
@@ -845,73 +764,22 @@ class _Book extends State<Book> {
         },
         onSelected: (String selection) {
           controller.text = selection;
-          setState(() {}); // Refresh the other field's options
+          setState(() {});
         },
       ),
     );
   }
 
-  Widget buildAutocompleteField2(
-    String hint,
-    TextEditingController controller,
-  ) {
-    return Container(
-      width: 300,
-      height: 60,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade400),
-      ),
-      child: Autocomplete<String>(
-        optionsBuilder: (TextEditingValue textEditingValue) {
-          List<String> options = List<String>.from(countries1);
-          if (textEditingValue.text == '') {
-            return options;
-          }
-
-          // Exclude the option selected in the other field
-          if (controller == box4Controller && box5Controller.text.isNotEmpty) {
-            options = options.where((c) => c != box5Controller.text).toList();
-          } else if (controller == box5Controller &&
-              box4Controller.text.isNotEmpty) {
-            options = options.where((c) => c != box4Controller.text).toList();
-          }
-
-          return options.where(
-            (option) => option.toLowerCase().contains(
-              textEditingValue.text.toLowerCase(),
-            ),
-          );
-        },
-        onSelected: (String selection) {
-          controller.text = selection;
-          setState(() {}); // Refresh the other field's options
-        },
-        fieldViewBuilder:
-            (context, textController, focusNode, onFieldSubmitted) {
-              return TextField(
-                controller: textController,
-                focusNode: focusNode,
-                decoration: InputDecoration(
-                  hintText: hint,
-                  border: InputBorder.none,
-                ),
-              );
-            },
-      ),
-    );
-  }
-
-  Widget buildClickableBox(String label) {
+  Widget buildClickableBox(String label, {bool isSelected = false}) {
     return Container(
       width: 93,
       height: 50,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isSelected ? Colors.black : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(
+          color: isSelected ? Colors.black : Colors.grey.shade300,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -924,8 +792,8 @@ class _Book extends State<Book> {
       child: Center(
         child: Text(
           label,
-          style: const TextStyle(
-            color: Colors.black,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.black,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -993,25 +861,42 @@ class _Book extends State<Book> {
         GestureDetector(
           onTap: () async {
             DateTime today = DateTime.now();
+            DateTime firstDate = today;
+            if (hint == "Arrival" && box6Controller.text.isNotEmpty) {
+              try {
+                firstDate = DateTime.parse(box6Controller.text);
+              } catch (e) {
+                firstDate = today;
+              }
+            }
             DateTime? pickedDate = await showDatePicker(
               context: context,
-              initialDate: today,
-              firstDate: today,
+              initialDate: firstDate,
+              firstDate: firstDate,
               lastDate: DateTime(today.year + 2),
             );
-
             if (pickedDate != null) {
               String formattedDate =
                   "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
               controller.text = formattedDate;
 
-              // Calculate price for Departure field only
               setState(() {
-                int daysDiff = pickedDate.difference(DateTime.now()).inDays;
-                _departurePrice = 10000 - (daysDiff * 100);
-                if (_departurePrice < 2000) _departurePrice = 2000;
-                _calculatePrice(); // Add this line to update total price
+                _calculatePrice();
               });
+
+              if (hint == "Arrival" &&
+                  box6Controller.text.isNotEmpty &&
+                  DateTime.tryParse(box6Controller.text) != null) {
+                DateTime departureDate = DateTime.parse(box6Controller.text);
+                if (pickedDate.isBefore(departureDate)) {
+                  controller.clear();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Arrival must be after Departure"),
+                    ),
+                  );
+                }
+              }
             }
           },
           child: Container(
@@ -1035,11 +920,12 @@ class _Book extends State<Book> {
             ),
           ),
         ),
-        // Only show price if a date has been selected
         Padding(
           padding: const EdgeInsets.only(top: 6, left: 8),
           child: Text(
-            'Price: ${box6Controller.text.isEmpty ? '--' : '₱$_departurePrice'}', // <-- use the new variable
+            hint == "Departure"
+                ? 'Price: ₱$_departurePrice'
+                : 'Price: ₱$_arrivalPrice',
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
