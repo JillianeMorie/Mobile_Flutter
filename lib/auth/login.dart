@@ -20,6 +20,14 @@ class _LoginPageState extends State<LoginPage> {
     text: widget.initialEmail ?? '',
   );
   final TextEditingController passwordController = TextEditingController();
+  bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,14 +123,23 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    onPressed: () => _loginUser(),
-                    child: const Text(
-                      "Login",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    onPressed: _isSubmitting ? null : () => _loginUser(),
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            "Login",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -199,54 +216,42 @@ class _LoginPageState extends State<LoginPage> {
     final email = emailController.text.trim();
     final password = passwordController.text;
 
-    // Validation
     if (email.isEmpty || password.isEmpty) {
       _showErrorDialog("Please enter both email and password.");
       return;
     }
 
-    // Show loading indicator
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) =>
-          const Center(child: CircularProgressIndicator(color: Colors.white)),
-    );
+    final emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    if (!emailPattern.hasMatch(email)) {
+      _showErrorDialog("Please enter a valid email address.");
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
 
     try {
       final userService = UserService();
-      final response = await userService.loginUser(email, password);
+      final result = await userService.loginUser(email, password);
 
-      // Close loading indicator
-      if (mounted) Navigator.pop(context);
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
 
-      if (response != null) {
-        // Login successful
-        if (mounted) {
-          _showSuccessDialog();
-          // Navigate to user dashboard after a short delay
-          await Future.delayed(const Duration(seconds: 1));
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const UserBook()),
-            );
-          }
-        }
+      if (result.success) {
+        await _showSuccessDialog();
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const UserBook()),
+        );
       } else {
-        // Login failed
-        if (mounted) {
-          _showErrorDialog("Invalid email or password. Please try again.");
-        }
+        _showErrorDialog(result.message);
       }
     } catch (e) {
-      // Close loading indicator if still showing
-      if (mounted) Navigator.pop(context);
-      if (mounted) {
-        _showErrorDialog(
-          "An error occurred. Please check your connection and try again.",
-        );
-      }
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      _showErrorDialog(
+        "An error occurred. Please check your connection and try again.",
+      );
     }
   }
 
@@ -267,7 +272,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _showSuccessDialog() {
+  Future<void> _showSuccessDialog() async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -290,5 +295,10 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+
+    await Future.delayed(const Duration(seconds: 1));
+    if (mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
   }
 }

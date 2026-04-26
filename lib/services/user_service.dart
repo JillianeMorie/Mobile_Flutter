@@ -1,6 +1,14 @@
 import 'dart:convert';
 import 'package:ticketing_flutter/services/api_client.dart';
 
+class AuthResult {
+  final bool success;
+  final String message;
+  final Map<String, dynamic>? data;
+
+  const AuthResult({required this.success, required this.message, this.data});
+}
+
 class UserService {
   static final UserService _instance = UserService._internal();
   factory UserService() => _instance;
@@ -9,8 +17,7 @@ class UserService {
   final ApiClient _apiClient = ApiClient();
 
   /// Register a new user
-  /// Returns true if successful, false otherwise
-  Future<bool> registerUser(Map<String, dynamic> userData) async {
+  Future<AuthResult> registerUser(Map<String, dynamic> userData) async {
     try {
       // Map Flutter app fields to backend DTO
       final requestBody = {
@@ -30,22 +37,27 @@ class UserService {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // Registration successful
-        return true;
+        return const AuthResult(
+          success: true,
+          message: 'Account registered successfully.',
+        );
       } else {
-        // Registration failed
-        print("Registration Error: ${response.statusCode} - ${response.body}");
-        return false;
+        final message = _extractErrorMessage(
+          response.body,
+          fallback: 'Registration failed. Please try again.',
+        );
+        return AuthResult(success: false, message: message);
       }
     } catch (e) {
-      print("Registration Exception: $e");
-      return false;
+      return const AuthResult(
+        success: false,
+        message: 'Unable to reach the server. Please check your connection.',
+      );
     }
   }
 
   /// Login user
-  /// Returns LoginResponse if successful, null otherwise
-  Future<Map<String, dynamic>?> loginUser(String email, String password) async {
+  Future<AuthResult> loginUser(String email, String password) async {
     try {
       final requestBody = {"Email": email, "Password": password};
 
@@ -55,24 +67,37 @@ class UserService {
       );
 
       if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
+        final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+        final token =
+            (responseData['Token'] ??
+                    responseData['token'] ??
+                    responseData['SessionToken'] ??
+                    responseData['sessionToken'])
+                ?.toString();
+        final userId = responseData['UserId'] ?? responseData['userId'];
 
         // Save token and user ID
-        if (responseData['token'] != null && responseData['userId'] != null) {
-          await _apiClient.saveToken(
-            responseData['token'],
-            responseData['userId'],
-          );
+        if (token != null && userId is int) {
+          await _apiClient.saveToken(token, userId);
         }
 
-        return responseData;
+        return AuthResult(
+          success: true,
+          message: 'Login successful.',
+          data: responseData,
+        );
       } else {
-        print("Login Error: ${response.statusCode} - ${response.body}");
-        return null;
+        final message = _extractErrorMessage(
+          response.body,
+          fallback: 'Invalid email or password.',
+        );
+        return AuthResult(success: false, message: message);
       }
     } catch (e) {
-      print("Login Exception: $e");
-      return null;
+      return const AuthResult(
+        success: false,
+        message: 'Unable to reach the server. Please check your connection.',
+      );
     }
   }
 
@@ -98,9 +123,29 @@ class UserService {
         return jsonDecode(response.body);
       }
       return null;
-    } catch (e) {
-      print("Get User Exception: $e");
+    } catch (_) {
       return null;
     }
+  }
+
+  String _extractErrorMessage(String responseBody, {required String fallback}) {
+    if (responseBody.isEmpty) return fallback;
+
+    try {
+      final decoded = jsonDecode(responseBody);
+      if (decoded is String && decoded.isNotEmpty) {
+        return decoded;
+      }
+      if (decoded is Map<String, dynamic>) {
+        final error = decoded['error'];
+        final message = decoded['message'];
+        if (error is String && error.isNotEmpty) return error;
+        if (message is String && message.isNotEmpty) return message;
+      }
+    } catch (_) {
+      // Fall back to plain response text below.
+    }
+
+    return responseBody;
   }
 }

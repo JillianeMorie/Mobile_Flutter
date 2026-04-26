@@ -9,17 +9,16 @@ class ApiClient {
 
   // When true the client will simulate backend responses in-memory.
   // Set to false to use a real backend via `baseUrl`.
-  static bool useMock = true;
+  static bool useMock = false;
 
   // In-memory mock storage for users (only used when `useMock == true`).
   final Map<int, Map<String, dynamic>> _mockUsers = {};
   int _nextMockUserId = 1;
 
   // TODO: Update this with your actual backend URL
-  // For local development, use: http://10.0.2.2:5000 (Android emulator)
-  // For physical device, use your computer's IP: http://192.168.x.x:5000
-  // For production, use your deployed backend URL
-  static const String baseUrl = "http://localhost:5000/api";
+  // For local development, use: http://10.0.2.2:5241 (Android emulator -> host)
+  // For physical device, use your computer's IP: http://192.168.x.x:5241
+  static const String baseUrl = "http://localhost:5241/api";
 
   static const String _tokenKey = 'auth_token';
   static const String _userIdKey = 'user_id';

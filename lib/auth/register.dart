@@ -22,6 +22,21 @@ class _RegisterPageState extends State<RegisterPage> {
       TextEditingController();
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
+  bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    firstNameController.dispose();
+    middleNameController.dispose();
+    lastNameController.dispose();
+    emailController.dispose();
+    contactNumberController.dispose();
+    birthdateController.dispose();
+    genderController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -156,7 +171,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   child: DropdownButtonFormField<String>(
                     dropdownColor: const Color(0xFF111827),
-                    value: genderController.text.isEmpty
+                    initialValue: genderController.text.isEmpty
                         ? null
                         : genderController.text,
                     icon: const Icon(
@@ -220,14 +235,23 @@ class _RegisterPageState extends State<RegisterPage> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    onPressed: _registerUser,
-                    child: const Text(
-                      "Register",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    onPressed: _isSubmitting ? null : _registerUser,
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            "Register",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -331,19 +355,17 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> _registerUser() async {
-    String firstName = firstNameController.text.trim();
-    String middleName = middleNameController.text.trim();
-    String lastName = lastNameController.text.trim();
-    String email = emailController.text.trim();
-    String contactNumber = contactNumberController.text.trim();
-    String birthdate = birthdateController.text.trim();
-    String gender = genderController.text.trim();
-    String password = passwordController.text;
-    String confirmPassword = confirmPasswordController.text;
+    final firstName = firstNameController.text.trim();
+    final middleName = middleNameController.text.trim();
+    final lastName = lastNameController.text.trim();
+    final email = emailController.text.trim();
+    final contactNumber = contactNumberController.text.trim();
+    final birthdate = birthdateController.text.trim();
+    final gender = genderController.text.trim();
+    final password = passwordController.text;
+    final confirmPassword = confirmPasswordController.text;
 
-    // Validation: Check if any field is empty
     if (firstName.isEmpty ||
-        middleName.isEmpty ||
         lastName.isEmpty ||
         email.isEmpty ||
         contactNumber.isEmpty ||
@@ -355,13 +377,24 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    // Password match validation
+    final emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    if (!emailPattern.hasMatch(email)) {
+      _showErrorDialog("Please enter a valid email address.");
+      return;
+    }
+
+    if (password.length < 8) {
+      _showErrorDialog("Password must be at least 8 characters long.");
+      return;
+    }
+
     if (password != confirmPassword) {
       _showErrorDialog("Passwords do not match.");
       return;
     }
 
-    // Prepare user data
+    setState(() => _isSubmitting = true);
+
     final userData = {
       "firstName": firstName,
       "middleName": middleName,
@@ -373,13 +406,15 @@ class _RegisterPageState extends State<RegisterPage> {
       "password": password,
     };
 
-    // Call the UserService to register the user
-    final success = await UserService().registerUser(userData);
+    final result = await UserService().registerUser(userData);
+    if (!mounted) return;
 
-    if (success) {
+    setState(() => _isSubmitting = false);
+
+    if (result.success) {
       _showSuccessDialog();
     } else {
-      _showErrorDialog("An error occurred while registering the account.");
+      _showErrorDialog(result.message);
     }
   }
 

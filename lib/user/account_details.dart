@@ -244,8 +244,7 @@ class _MyAccountDetailsPageState extends State<MyAccountDetailsPage> {
   }
 
   Widget _buildContent({
-    required String? firstName,
-    required String? lastName,
+    required String? fullName,
     required String? email,
     required String? phone,
     required String? dob,
@@ -312,11 +311,7 @@ class _MyAccountDetailsPageState extends State<MyAccountDetailsPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                if (firstName != null || lastName != null)
-                  _buildInfoItem(
-                    'Name',
-                    '${firstName ?? ''} ${lastName ?? ''}'.trim(),
-                  ),
+                if (fullName != null) _buildInfoItem('Name', fullName),
                 if (email != null) _buildInfoItem('Email', email),
                 if (phone != null) _buildInfoItem('Phone', phone),
                 if (dob != null) _buildInfoItem('Birthdate', dob),
@@ -356,11 +351,13 @@ class _MyAccountDetailsPageState extends State<MyAccountDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final firstName = _readField(['FirstName', 'firstName', 'firstname']);
-    final lastName = _readField(['LastName', 'lastName', 'lastname']);
+    final fullName = _readField(['FullName', 'fullName', 'fullname']);
     final email = _readField(['Email', 'email']);
     final phone = _readField(['PhoneNumber', 'phone']);
-    final dob = _readField(['DateOfBirth', 'dateOfBirth', 'dob', 'birthdate']);
+    var dob = _readField(['DateOfBirth', 'dateOfBirth', 'dob', 'birthdate']);
+    if (dob != null && dob.contains('T')) {
+      dob = dob.split('T')[0];
+    }
     final gender = _readField(['Gender', 'gender']);
 
     return Scaffold(
@@ -537,8 +534,7 @@ class _MyAccountDetailsPageState extends State<MyAccountDetailsPage> {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 80, 20, 20),
               child: _buildContent(
-                firstName: firstName,
-                lastName: lastName,
+                fullName: fullName,
                 email: email,
                 phone: phone,
                 dob: dob,
