@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:ticketing_flutter/public/bookpage.dart';
 import 'package:ticketing_flutter/public/book.dart';
 import 'package:ticketing_flutter/public/explore.dart';
-import 'package:ticketing_flutter/public/travel_info.dart';
-import 'package:ticketing_flutter/public/manage/manage.dart';
-import 'package:ticketing_flutter/auth/login.dart';
+import 'package:ticketing_flutter/user/user_travel_info.dart';
+import 'package:ticketing_flutter/user/user_manage/user_manage.dart';
 import 'package:ticketing_flutter/user/account_details.dart';
 
 class Userabout extends StatefulWidget {
@@ -93,12 +92,12 @@ class _Userabout extends State<Userabout> {
               _drawerItem(
                 icon: Icons.manage_accounts,
                 label: 'Manage',
-                onTap: () => _nav(const ManagePage()),
+                onTap: () => _nav(const UserManagePage()),
               ),
               _drawerItem(
                 icon: Icons.info,
                 label: 'Travel Info',
-                onTap: () => _nav(const TravelInfoPage()),
+                onTap: () => _nav(const UserTravelInfoPage()),
               ),
               _drawerItem(
                 icon: Icons.explore,
@@ -113,7 +112,7 @@ class _Userabout extends State<Userabout> {
               _drawerItem(
                 icon: Icons.login,
                 label: 'My Account',
-                onTap: () => _nav(const MyAccountDetailsPage()),
+                onTap: () => _nav(const UserAccountDetailsPage()),
               ),
             ],
           ),

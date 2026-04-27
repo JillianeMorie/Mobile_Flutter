@@ -30,7 +30,7 @@ class _UserBookMulticityState extends State<UserBookMulticity> {
   bool _isSearchPressed = false;
 
   /// Multi-city list of routes
-  List<FlightRoute> routes = [FlightRoute()];
+  List<UserFlightRoute> routes = [UserFlightRoute()];
 
   @override
   void initState() {
@@ -41,7 +41,7 @@ class _UserBookMulticityState extends State<UserBookMulticity> {
 
   void _addRoute() {
     setState(() {
-      routes.add(FlightRoute());
+      routes.add(UserFlightRoute());
     });
   }
 
@@ -258,7 +258,7 @@ class _UserBookMulticityState extends State<UserBookMulticity> {
                   context,
                   PageRouteBuilder(
                     pageBuilder: (context, animation1, animation2) =>
-                        const MyAccountDetailsPage(),
+                        const UserAccountDetailsPage(),
                     transitionDuration: Duration.zero,
                   ),
                 );
@@ -385,7 +385,7 @@ class _UserBookMulticityState extends State<UserBookMulticity> {
                             shrinkWrap: true,
                             itemCount: routes.length,
                             itemBuilder: (context, index) {
-                              return FlightRouteCard(
+                              return UserFlightRouteCard(
                                 route: routes[index],
                                 onRemove: () => _removeRoute(index),
                               );
@@ -686,18 +686,18 @@ class _UserBookMulticityState extends State<UserBookMulticity> {
   }
 }
 
-class FlightRoute {
+class UserFlightRoute {
   final TextEditingController fromController = TextEditingController();
   final TextEditingController toController = TextEditingController();
   final TextEditingController dateController = TextEditingController();
   int selectedPrice = 10000;
 }
 
-class FlightRouteCard extends StatelessWidget {
-  final FlightRoute route;
+class UserFlightRouteCard extends StatelessWidget {
+  final UserFlightRoute route;
   final VoidCallback onRemove;
 
-  const FlightRouteCard({
+  const UserFlightRouteCard({
     super.key,
     required this.route,
     required this.onRemove,
@@ -833,8 +833,8 @@ class FlightRouteCard extends StatelessWidget {
   }
 }
 
-class Page9 extends StatelessWidget {
-  const Page9({super.key});
+class UserPage9 extends StatelessWidget {
+  const UserPage9({super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(

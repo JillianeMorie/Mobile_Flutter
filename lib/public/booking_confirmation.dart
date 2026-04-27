@@ -30,7 +30,7 @@ class BookingConfirmationPage extends StatelessWidget {
           format: ui.ImageByteFormat.png,
         );
         if (picData != null) {
-          final result = await ImageGallerySaverPlus.saveImage(
+          await ImageGallerySaverPlus.saveImage(
             Uint8List.view(picData.buffer),
             quality: 100,
             name: "booking_qr_${DateTime.now().millisecondsSinceEpoch}",
@@ -66,6 +66,8 @@ class BookingConfirmationPage extends StatelessWidget {
   final int children;
   final int infants;
   final String? paymentMethod;
+  final String? accountCtaLabel;
+  final WidgetBuilder? accountCtaPageBuilder;
 
   const BookingConfirmationPage({
     super.key,
@@ -79,6 +81,8 @@ class BookingConfirmationPage extends StatelessWidget {
     required this.children,
     required this.infants,
     this.paymentMethod,
+    this.accountCtaLabel,
+    this.accountCtaPageBuilder,
   });
 
   int get travelerCount => guests.length;
@@ -629,34 +633,6 @@ class BookingConfirmationPage extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: SizedBox(
-                              height: 48,
-                              child: OutlinedButton.icon(
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: Colors.green),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                onPressed: () =>
-                                    _downloadQrCode(context, qrData),
-                                icon: const Icon(
-                                  Icons.download,
-                                  color: Colors.green,
-                                ),
-                                label: const Text(
-                                  "Download QR",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.green,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -666,12 +642,13 @@ class BookingConfirmationPage extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const RegisterPage(),
+                                builder: accountCtaPageBuilder ??
+                                    (context) => const RegisterPage(),
                               ),
                             );
                           },
-                          child: const Text(
-                            "Create an account now!",
+                          child: Text(
+                            accountCtaLabel ?? "Create an account now!",
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,

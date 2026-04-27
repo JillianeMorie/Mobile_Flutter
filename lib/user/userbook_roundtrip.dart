@@ -303,7 +303,7 @@ class _UserBookRoundtrip extends State<UserBookRoundtrip> {
                   context,
                   PageRouteBuilder(
                     pageBuilder: (context, animation1, animation2) =>
-                        const MyAccountDetailsPage(),
+                        const UserAccountDetailsPage(),
                     transitionDuration: Duration.zero,
                   ),
                 );

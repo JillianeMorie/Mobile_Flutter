@@ -1,29 +1,35 @@
 import 'package:flutter/material.dart';
+
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ticketing_flutter/auth/login.dart';
+import 'package:ticketing_flutter/services/mqtt_service.dart';
 import 'package:ticketing_flutter/services/user_service.dart';
-import 'package:ticketing_flutter/public/search_flight.dart';
 import 'package:ticketing_flutter/public/manage/manage.dart';
 import 'package:ticketing_flutter/public/travel_info.dart';
 import 'package:ticketing_flutter/public/explore.dart';
 import 'package:ticketing_flutter/user/userabout.dart';
-import 'package:ticketing_flutter/user/userbook_oneway.dart';
+import 'package:ticketing_flutter/user/user_tracker_map_page.dart';
 import 'package:ticketing_flutter/public/bookpage.dart';
+import 'dart:convert';
 
-class MyAccountDetailsPage extends StatefulWidget {
-  const MyAccountDetailsPage({super.key});
+class UserAccountDetailsPage extends StatefulWidget {
+  const UserAccountDetailsPage({super.key});
 
   @override
-  State<MyAccountDetailsPage> createState() => _MyAccountDetailsPageState();
+  State<UserAccountDetailsPage> createState() => _UserAccountDetailsPageState();
 }
 
-class _MyAccountDetailsPageState extends State<MyAccountDetailsPage> {
+class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
   Map<String, dynamic>? _user;
+  List<Map<String, dynamic>> _bookedFlights = [];
   bool _isLoading = true;
   String? _error;
 
-  final TextEditingController _tagController = TextEditingController();
   String? _luggageStatus;
   bool _isSearchingLuggage = false;
+  final MqttLocationService _mqttLocationService = MqttLocationService();
+  double? _lastLatitude;
+  double? _lastLongitude;
 
   @override
   void initState() {
@@ -33,7 +39,7 @@ class _MyAccountDetailsPageState extends State<MyAccountDetailsPage> {
 
   @override
   void dispose() {
-    _tagController.dispose();
+    _mqttLocationService.disconnect();
     super.dispose();
   }
 
@@ -56,11 +62,26 @@ class _MyAccountDetailsPageState extends State<MyAccountDetailsPage> {
     }
 
     final user = await userService.getCurrentUser();
+    final bookedFlights = await _loadBookedFlights();
     if (mounted) {
       setState(() {
         _user = user;
+        _bookedFlights = bookedFlights;
         _isLoading = false;
       });
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _loadBookedFlights() async {
+    final prefs = await SharedPreferences.getInstance();
+    const key = 'user_booking_history';
+    final raw = prefs.getString(key);
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final decoded = jsonDecode(raw) as List<dynamic>;
+      return decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    } catch (_) {
+      return [];
     }
   }
 
@@ -85,26 +106,89 @@ class _MyAccountDetailsPageState extends State<MyAccountDetailsPage> {
     );
   }
 
-  void _trackLuggage() {
-    if (_tagController.text.isEmpty) {
+  Future<void> _trackLuggage() async {
+    final trackerId = _autoTrackerId;
+    if (trackerId == null || trackerId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please enter a baggage tag number'),
+          content: Text('No tracker ID found for this account yet'),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 3),
         ),
       );
       return;
     }
-    setState(() => _isSearchingLuggage = true);
-
-    // Replace this with your real API call
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() {
-        _isSearchingLuggage = false;
-        _luggageStatus = 'Loaded on flight PR582 at MNL - 2:45 PM';
-      });
+    setState(() {
+      _isSearchingLuggage = true;
+      _luggageStatus = 'Connecting to tracker...';
     });
+
+    await _mqttLocationService.disconnect();
+
+    await _mqttLocationService.subscribeToTracker(
+      broker: '192.168.57.163',
+      port: 1883,
+      topic: 'jose/betonio/loc',
+      useWebSocket: false,
+      useTls: false,
+      onStatus: (status) {
+        if (!mounted) return;
+        setState(() {
+          _isSearchingLuggage = false;
+          _luggageStatus = status;
+        });
+      },
+      onData: (data) {
+        if (!mounted) return;
+        setState(() {
+          if (data.latitude != null && data.longitude != null) {
+            _lastLatitude = data.latitude;
+            _lastLongitude = data.longitude;
+            final ts = data.timestamp ?? DateTime.now().toIso8601String();
+            _luggageStatus =
+                'Live GPS\nLat: ${data.latitude}\nLng: ${data.longitude}\nUpdated: $ts';
+          } else {
+            _luggageStatus = 'MQTT payload: ${data.rawPayload}';
+          }
+        });
+      },
+      onError: (error) {
+        if (!mounted) return;
+        setState(() {
+          _isSearchingLuggage = false;
+          _luggageStatus = error;
+        });
+      },
+    );
+  }
+
+  String? get _autoTrackerId {
+    // Test mode: fixed tracker id to match terminal publish command.
+    return 'tracker123';
+
+    /*
+    if (_bookedFlights.isNotEmpty) {
+      final latest = _bookedFlights.first;
+      final candidates = [
+        latest['trackerId'],
+        latest['luggageTrackerId'],
+        latest['tagNumber'],
+        latest['bookingRef'],
+      ];
+      for (final candidate in candidates) {
+        final value = candidate?.toString().trim();
+        if (value != null && value.isNotEmpty) {
+          return value;
+        }
+      }
+    }
+
+    final userId = _readField(['UserId', 'userId', 'id']);
+    if (userId != null && userId.trim().isNotEmpty) {
+      return 'user_$userId';
+    }
+    return null;
+    */
   }
 
   Widget _buildInfoItem(String label, String value) {
@@ -168,20 +252,14 @@ class _MyAccountDetailsPageState extends State<MyAccountDetailsPage> {
             ],
           ),
           const SizedBox(height: 16),
-          TextField(
-            controller: _tagController,
-            decoration: InputDecoration(
-              hintText: 'Enter baggage tag number',
-              filled: true,
-              fillColor: Colors.grey.shade200,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade400),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade400),
-              ),
+          Text(
+            _autoTrackerId == null
+                ? 'Topic: jose/betonio/loc'
+                : 'Topic: jose/betonio/loc (Tracker: $_autoTrackerId)',
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black54,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 12),
@@ -238,6 +316,127 @@ class _MyAccountDetailsPageState extends State<MyAccountDetailsPage> {
               ),
             ),
           ],
+          if (_lastLatitude != null && _lastLongitude != null) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Color(0xFF1E3A8A)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => UserTrackerMapPage(
+                        latitude: _lastLatitude!,
+                        longitude: _lastLongitude!,
+                        statusText: _luggageStatus,
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.map, color: Color(0xFF1E3A8A)),
+                label: const Text(
+                  'Open tracker map page',
+                  style: TextStyle(
+                    color: Color(0xFF1E3A8A),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBookedFlightsSection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            spreadRadius: 2,
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.flight_takeoff, color: Color(0xFF1E3A8A)),
+              SizedBox(width: 8),
+              Text(
+                'Booked Flights',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E3A8A),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          if (_bookedFlights.isEmpty)
+            const Text(
+              'No booked flights yet.',
+              style: TextStyle(color: Colors.black54, fontSize: 15),
+            )
+          else
+            ..._bookedFlights.map((booking) {
+              final from = booking['from']?.toString() ?? '';
+              final to = booking['to']?.toString() ?? '';
+              final date = booking['date']?.toString() ?? '';
+              final time = booking['time']?.toString() ?? '';
+              final flightNo = booking['flightNumber']?.toString() ?? '';
+              final travelClass = booking['travelClass']?.toString() ?? '';
+              final total = booking['total'];
+              final totalLabel = total is num
+                  ? "PHP ${total.toStringAsFixed(2)}"
+                  : 'N/A';
+              final bookingRef = booking['bookingRef']?.toString() ?? '';
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.shade100),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$from -> $to',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E3A8A),
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text('Flight: $flightNo'),
+                    Text('Departure: $date $time'),
+                    Text('Class: $travelClass'),
+                    Text('Total: $totalLabel'),
+                    if (bookingRef.isNotEmpty) Text('Reference: $bookingRef'),
+                  ],
+                ),
+              );
+            }),
         ],
       ),
     );
@@ -324,6 +523,8 @@ class _MyAccountDetailsPageState extends State<MyAccountDetailsPage> {
               ],
             ),
           ),
+          const SizedBox(height: 24),
+          _buildBookedFlightsSection(),
           const SizedBox(height: 24),
           _buildLuggageTracker(),
           const SizedBox(height: 24),

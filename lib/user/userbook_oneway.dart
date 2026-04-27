@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ticketing_flutter/public/book_roundtrip.dart';
 import 'package:ticketing_flutter/user/userbook_multicity.dart';
-import 'package:ticketing_flutter/public/search_flight.dart';
+import 'package:ticketing_flutter/user/usersearch_flight.dart';
 import 'package:ticketing_flutter/auth/login.dart';
 import 'package:ticketing_flutter/services/countries.dart';
 import 'package:ticketing_flutter/public/manage/manage.dart';
@@ -340,7 +340,7 @@ class _UserBookOneway extends State<UserBookOneway> {
                   context,
                   PageRouteBuilder(
                     pageBuilder: (context, animation1, animation2) =>
-                        const MyAccountDetailsPage(),
+                        const UserAccountDetailsPage(),
                     transitionDuration: Duration.zero,
                   ),
                 );
@@ -539,7 +539,7 @@ class _UserBookOneway extends State<UserBookOneway> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => SearchFlightsPage(
+                                builder: (context) => UsersearchFlight(
                                   from: box4Controller.text,
                                   to: box5Controller.text,
                                   departureDate: box6Controller.text,
