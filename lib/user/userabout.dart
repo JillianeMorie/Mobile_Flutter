@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ticketing_flutter/public/bookpage.dart';
-import 'package:ticketing_flutter/public/book.dart';
-import 'package:ticketing_flutter/public/explore.dart';
+import 'package:ticketing_flutter/user/user_bookpage.dart';
+import 'package:ticketing_flutter/user/user_book.dart';
+import 'package:ticketing_flutter/user/user_explore.dart';
 import 'package:ticketing_flutter/user/user_travel_info.dart';
 import 'package:ticketing_flutter/user/user_manage/user_manage.dart';
 import 'package:ticketing_flutter/user/account_details.dart';
@@ -87,7 +87,7 @@ class _Userabout extends State<Userabout> {
               _drawerItem(
                 icon: Icons.flight,
                 label: 'Book',
-                onTap: () => _navReplace(const FlightBookingApp()),
+                onTap: () => _navReplace(const UserBookPage()),
               ),
               _drawerItem(
                 icon: Icons.manage_accounts,
@@ -102,7 +102,7 @@ class _Userabout extends State<Userabout> {
               _drawerItem(
                 icon: Icons.explore,
                 label: 'Explore',
-                onTap: () => _nav(const ExplorePage()),
+                onTap: () => _nav(const UserExplore()),
               ),
               _drawerItem(
                 icon: Icons.home,
@@ -218,7 +218,7 @@ class _Userabout extends State<Userabout> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const Book(),
+                                  builder: (context) => const UserBook(),
                                 ),
                               );
                             },

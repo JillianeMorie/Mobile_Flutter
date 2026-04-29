@@ -7,10 +7,10 @@ import 'package:ticketing_flutter/auth/login.dart';
 import 'package:ticketing_flutter/services/countries.dart';
 import 'package:ticketing_flutter/user/userabout.dart';
 import 'package:ticketing_flutter/user/account_details.dart';
-import 'package:ticketing_flutter/public/explore.dart';
-import 'package:ticketing_flutter/public/travel_info.dart';
-import 'package:ticketing_flutter/public/manage/manage.dart';
-import 'package:ticketing_flutter/public/bookpage.dart';
+import 'package:ticketing_flutter/user/user_explore.dart';
+import 'package:ticketing_flutter/user/user_travel_info.dart';
+import 'package:ticketing_flutter/user/user_manage/user_manage.dart';
+import 'package:ticketing_flutter/user/user_bookpage.dart';
 
 import 'dart:async';
 
@@ -245,7 +245,7 @@ class _UserBookState extends State<UserBook> {
                   context,
                   PageRouteBuilder(
                     pageBuilder: (context, animation1, animation2) =>
-                        const FlightBookingApp(),
+                        const UserBookPage(),
                     transitionDuration: Duration.zero,
                   ),
                 );
@@ -263,7 +263,7 @@ class _UserBookState extends State<UserBook> {
                   context,
                   PageRouteBuilder(
                     pageBuilder: (context, animation1, animation2) =>
-                        const ManagePage(),
+                        const UserManagePage(),
                     transitionDuration: Duration.zero,
                   ),
                 );
@@ -281,7 +281,7 @@ class _UserBookState extends State<UserBook> {
                   context,
                   PageRouteBuilder(
                     pageBuilder: (context, animation1, animation2) =>
-                        const TravelInfoPage(),
+                        const UserTravelInfoPage(),
                     transitionDuration: Duration.zero,
                   ),
                 );
@@ -299,7 +299,7 @@ class _UserBookState extends State<UserBook> {
                   context,
                   PageRouteBuilder(
                     pageBuilder: (context, animation1, animation2) =>
-                        const ExplorePage(),
+                        const UserExplore(),
                     transitionDuration: Duration.zero,
                   ),
                 );

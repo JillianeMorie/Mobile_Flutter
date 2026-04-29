@@ -74,10 +74,15 @@ class UserService {
                     responseData['SessionToken'] ??
                     responseData['sessionToken'])
                 ?.toString();
-        final userId = responseData['UserId'] ?? responseData['userId'];
+        final dynamic rawId = responseData['UserId'] ?? responseData['userId'];
+        final int? userId = rawId is int
+            ? rawId
+            : rawId is num
+                ? rawId.toInt()
+                : int.tryParse(rawId?.toString() ?? '');
 
-        // Save token and user ID
-        if (token != null && userId is int) {
+        // Save token and user ID (Auth API returns SessionToken, not JWT.)
+        if (token != null && token.isNotEmpty && userId != null) {
           await _apiClient.saveToken(token, userId);
         }
 

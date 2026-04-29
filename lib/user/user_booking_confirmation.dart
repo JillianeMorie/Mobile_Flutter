@@ -28,5 +28,6 @@ class UserBookingConfirmationPage extends BookingConfirmationPage {
          paymentMethod: paymentMethod,
          accountCtaLabel: "Back to Your Account",
          accountCtaPageBuilder: (context) => const UserAccountDetailsPage(),
+         disableBackNavigation: true,
        );
 }

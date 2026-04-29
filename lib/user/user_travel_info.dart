@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:ticketing_flutter/public/bookpage.dart';
+import 'package:ticketing_flutter/user/user_bookpage.dart';
 import 'package:ticketing_flutter/user/userabout.dart';
 import 'package:ticketing_flutter/user/user_explore.dart';
-import 'package:ticketing_flutter/public/manage/manage.dart';
+import 'package:ticketing_flutter/user/user_manage/user_manage.dart';
 import 'package:ticketing_flutter/user/account_details.dart';
 
 class UserTravelInfoPage extends StatefulWidget {
@@ -86,12 +86,12 @@ class _UserTravelInfoPageState extends State<UserTravelInfoPage> {
               _drawerItem(
                 icon: Icons.flight,
                 label: 'Book',
-                onTap: () => _navReplace(const FlightBookingApp()),
+                onTap: () => _navReplace(const UserBookPage()),
               ),
               _drawerItem(
                 icon: Icons.manage_accounts,
                 label: 'Manage',
-                onTap: () => _nav(const ManagePage()),
+                onTap: () => _nav(const UserManagePage()),
               ),
               _drawerItem(
                 icon: Icons.info,

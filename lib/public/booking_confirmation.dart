@@ -68,6 +68,7 @@ class BookingConfirmationPage extends StatelessWidget {
   final String? paymentMethod;
   final String? accountCtaLabel;
   final WidgetBuilder? accountCtaPageBuilder;
+  final bool disableBackNavigation;
 
   const BookingConfirmationPage({
     super.key,
@@ -83,6 +84,7 @@ class BookingConfirmationPage extends StatelessWidget {
     this.paymentMethod,
     this.accountCtaLabel,
     this.accountCtaPageBuilder,
+    this.disableBackNavigation = false,
   });
 
   int get travelerCount => guests.length;
@@ -201,9 +203,11 @@ class BookingConfirmationPage extends StatelessWidget {
       'paymentMethod': paymentMethod,
     });
 
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      body: Container(
+    return PopScope(
+      canPop: !disableBackNavigation,
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        body: Container(
         width: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -642,7 +646,8 @@ class BookingConfirmationPage extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: accountCtaPageBuilder ??
+                                builder:
+                                    accountCtaPageBuilder ??
                                     (context) => const RegisterPage(),
                               ),
                             );
@@ -664,6 +669,7 @@ class BookingConfirmationPage extends StatelessWidget {
               ],
             ),
           ),
+        ),
         ),
       ),
     );

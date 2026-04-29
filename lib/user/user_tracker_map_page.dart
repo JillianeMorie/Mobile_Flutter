@@ -25,10 +25,7 @@ class UserTrackerMapPage extends StatelessWidget {
               width: double.infinity,
               color: Colors.blueGrey.shade50,
               padding: const EdgeInsets.all(12),
-              child: Text(
-                statusText!,
-                style: const TextStyle(fontSize: 13),
-              ),
+              child: Text(statusText!, style: const TextStyle(fontSize: 13)),
             ),
           Expanded(
             child: GoogleMap(

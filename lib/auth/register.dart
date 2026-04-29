@@ -23,6 +23,80 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isSubmitting = false;
+  String? _firstNameError;
+  String? _middleNameError;
+  String? _lastNameError;
+  String? _emailError;
+  String? _birthdateError;
+  String? _contactNumberError;
+  String? _passwordError;
+  String? _confirmPasswordError;
+
+  String? _validateNameWhileTyping(String value, {bool isOptional = false}) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return isOptional ? null : null;
+    }
+
+    // Allow letters, spaces, apostrophes, dots and hyphens only.
+    final namePattern = RegExp(r"^[A-Za-z][A-Za-z\s'.-]*$");
+    if (!namePattern.hasMatch(trimmed)) {
+      return 'Alphabet letters only';
+    }
+
+    return null;
+  }
+
+  String? _validateEmailWhileTyping(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return null;
+
+    final emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    if (!emailPattern.hasMatch(trimmed)) {
+      return 'Enter valid address';
+    }
+
+    return null;
+  }
+
+  String? _validateContactNumberWhileTyping(String value) {
+    final digitsOnly = value.replaceAll(RegExp(r'\D'), '');
+    if (digitsOnly.isEmpty) return null;
+    if (digitsOnly.length < 11) {
+      return 'Contact number must be at least 11 digits';
+    }
+    return null;
+  }
+
+  String? _validatePasswordWhileTyping(String value) {
+    if (value.isEmpty) return null;
+    if (value.length < 8) return 'Password must be at least 8 characters';
+    return null;
+  }
+
+  String? _validateConfirmPasswordWhileTyping(
+    String confirmPassword,
+    String password,
+  ) {
+    if (confirmPassword.isEmpty) return null;
+    if (confirmPassword != password) return 'Passwords do not match';
+    return null;
+  }
+
+  bool _isAtLeast18(DateTime birthDate) {
+    final now = DateTime.now();
+    int age = now.year - birthDate.year;
+
+    final birthdayThisYearPassed =
+        (now.month > birthDate.month) ||
+        (now.month == birthDate.month && now.day >= birthDate.day);
+
+    if (!birthdayThisYearPassed) {
+      age--;
+    }
+
+    return age >= 18;
+  }
 
   @override
   void dispose() {
@@ -79,6 +153,12 @@ class _RegisterPageState extends State<RegisterPage> {
                   controller: firstNameController,
                   label: "First Name",
                   icon: Icons.person,
+                  errorText: _firstNameError,
+                  onChanged: (value) {
+                    setState(() {
+                      _firstNameError = _validateNameWhileTyping(value);
+                    });
+                  },
                 ),
                 const SizedBox(height: 10),
 
@@ -87,6 +167,15 @@ class _RegisterPageState extends State<RegisterPage> {
                   controller: middleNameController,
                   label: "Middle Name",
                   icon: Icons.person,
+                  errorText: _middleNameError,
+                  onChanged: (value) {
+                    setState(() {
+                      _middleNameError = _validateNameWhileTyping(
+                        value,
+                        isOptional: true,
+                      );
+                    });
+                  },
                 ),
                 const SizedBox(height: 10),
 
@@ -95,6 +184,12 @@ class _RegisterPageState extends State<RegisterPage> {
                   controller: lastNameController,
                   label: "Last Name",
                   icon: Icons.person,
+                  errorText: _lastNameError,
+                  onChanged: (value) {
+                    setState(() {
+                      _lastNameError = _validateNameWhileTyping(value);
+                    });
+                  },
                 ),
                 const SizedBox(height: 10),
 
@@ -104,6 +199,12 @@ class _RegisterPageState extends State<RegisterPage> {
                   label: "Email",
                   icon: Icons.email,
                   keyboardType: TextInputType.emailAddress,
+                  errorText: _emailError,
+                  onChanged: (value) {
+                    setState(() {
+                      _emailError = _validateEmailWhileTyping(value);
+                    });
+                  },
                 ),
                 const SizedBox(height: 10),
 
@@ -113,6 +214,14 @@ class _RegisterPageState extends State<RegisterPage> {
                   label: "Contact Number",
                   icon: Icons.phone,
                   keyboardType: TextInputType.phone,
+                  errorText: _contactNumberError,
+                  onChanged: (value) {
+                    setState(() {
+                      _contactNumberError = _validateContactNumberWhileTyping(
+                        value,
+                      );
+                    });
+                  },
                 ),
                 const SizedBox(height: 10),
 
@@ -147,6 +256,9 @@ class _RegisterPageState extends State<RegisterPage> {
                       setState(() {
                         birthdateController.text =
                             "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                        _birthdateError = _isAtLeast18(pickedDate)
+                            ? null
+                            : "You must be 18 years old and above.";
                       });
                     }
                   },
@@ -155,6 +267,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       controller: birthdateController,
                       label: "Birthdate",
                       icon: Icons.calendar_today,
+                      errorText: _birthdateError,
                     ),
                   ),
                 ),
@@ -204,6 +317,17 @@ class _RegisterPageState extends State<RegisterPage> {
                   controller: passwordController,
                   label: "Create Password",
                   isVisible: _isPasswordVisible,
+                  errorText: _passwordError,
+                  onChanged: (value) {
+                    setState(() {
+                      _passwordError = _validatePasswordWhileTyping(value);
+                      _confirmPasswordError =
+                          _validateConfirmPasswordWhileTyping(
+                            confirmPasswordController.text,
+                            value,
+                          );
+                    });
+                  },
                   onToggleVisibility: () =>
                       setState(() => _isPasswordVisible = !_isPasswordVisible),
                 ),
@@ -214,6 +338,16 @@ class _RegisterPageState extends State<RegisterPage> {
                   controller: confirmPasswordController,
                   label: "Confirm Password",
                   isVisible: _isConfirmPasswordVisible,
+                  errorText: _confirmPasswordError,
+                  onChanged: (value) {
+                    setState(() {
+                      _confirmPasswordError =
+                          _validateConfirmPasswordWhileTyping(
+                            value,
+                            passwordController.text,
+                          );
+                    });
+                  },
                   onToggleVisibility: () => setState(
                     () =>
                         _isConfirmPasswordVisible = !_isConfirmPasswordVisible,
@@ -299,14 +433,19 @@ class _RegisterPageState extends State<RegisterPage> {
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
     bool obscureText = false,
+    String? errorText,
+    ValueChanged<String>? onChanged,
   }) {
     return TextField(
       controller: controller,
+      onChanged: onChanged,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.white70),
         prefixIcon: Icon(icon, color: Colors.white),
+        errorText: errorText,
+        errorStyle: const TextStyle(color: Colors.amberAccent),
         enabledBorder: OutlineInputBorder(
           borderSide: const BorderSide(color: Colors.white70),
           borderRadius: BorderRadius.circular(12),
@@ -325,15 +464,20 @@ class _RegisterPageState extends State<RegisterPage> {
     required TextEditingController controller,
     required String label,
     required bool isVisible,
+    String? errorText,
+    ValueChanged<String>? onChanged,
     required VoidCallback onToggleVisibility,
   }) {
     return TextField(
       controller: controller,
+      onChanged: onChanged,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.white70),
         prefixIcon: const Icon(Icons.lock, color: Colors.white),
+        errorText: errorText,
+        errorStyle: const TextStyle(color: Colors.amberAccent),
         suffixIcon: IconButton(
           onPressed: onToggleVisibility,
           icon: Icon(
@@ -383,13 +527,58 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    if (password.length < 8) {
-      _showErrorDialog("Password must be at least 8 characters long.");
+    // Keep only digits so formatted inputs like +63/space/dash are handled.
+    final contactDigitsOnly = contactNumber.replaceAll(RegExp(r'\D'), '');
+    if (contactDigitsOnly.length < 11) {
+      _showErrorDialog("Contact number must be at least 11 digits.");
       return;
     }
 
-    if (password != confirmPassword) {
-      _showErrorDialog("Passwords do not match.");
+    DateTime? parsedBirthdate;
+    try {
+      parsedBirthdate = DateTime.parse(birthdate);
+    } catch (_) {
+      _showErrorDialog("Please enter a valid birthdate.");
+      return;
+    }
+
+    if (!_isAtLeast18(parsedBirthdate)) {
+      setState(() {
+        _birthdateError = "You must be 18 years old and above.";
+      });
+      _showErrorDialog("You must be 18 years old and above.");
+      return;
+    } else {
+      setState(() {
+        _birthdateError = null;
+      });
+    }
+
+    // Names should only contain letters and common separators (no digits).
+    final namePattern = RegExp(r"^[A-Za-z][A-Za-z\s'.-]*$");
+    if (!namePattern.hasMatch(firstName)) {
+      _showErrorDialog("First name must not contain numbers.");
+      return;
+    }
+    if (middleName.isNotEmpty && !namePattern.hasMatch(middleName)) {
+      _showErrorDialog("Middle name must not contain numbers.");
+      return;
+    }
+    if (!namePattern.hasMatch(lastName)) {
+      _showErrorDialog("Last name must not contain numbers.");
+      return;
+    }
+
+    final passwordError = _validatePasswordWhileTyping(password);
+    final confirmPasswordError = _validateConfirmPasswordWhileTyping(
+      confirmPassword,
+      password,
+    );
+    if (passwordError != null || confirmPasswordError != null) {
+      setState(() {
+        _passwordError = passwordError;
+        _confirmPasswordError = confirmPasswordError;
+      });
       return;
     }
 

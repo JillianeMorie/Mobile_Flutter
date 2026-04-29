@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ticketing_flutter/services/flight.dart';
 import 'package:ticketing_flutter/public/home.dart';
-import 'package:ticketing_flutter/user/user_bundle.dart';
+import 'package:ticketing_flutter/public/bundle.dart';
 
 final List<Flight> _mockFlights = [
   Flight(
@@ -78,7 +78,7 @@ final List<Flight> _mockFlights = [
   ),
 ];
 
-class UsersearchFlight extends StatefulWidget {
+class SearchFlightsPage extends StatefulWidget {
   final String from;
   final String to;
   final String departureDate;
@@ -86,7 +86,7 @@ class UsersearchFlight extends StatefulWidget {
   final int children;
   final int infants;
 
-  const UsersearchFlight({
+  const SearchFlightsPage({
     super.key,
     required this.from,
     required this.to,
@@ -97,10 +97,10 @@ class UsersearchFlight extends StatefulWidget {
   });
 
   @override
-  State<UsersearchFlight> createState() => _SearchFlightsPageState();
+  State<SearchFlightsPage> createState() => _SearchFlightsPageState();
 }
 
-class _SearchFlightsPageState extends State<UsersearchFlight> {
+class _SearchFlightsPageState extends State<SearchFlightsPage> {
   String selectedTripType = "One Way";
   final List<String> tripTypes = ["One Way", "Roundtrip", "Multicity"];
   late Future<List<Flight>> _flightsFuture;
@@ -149,7 +149,7 @@ class _SearchFlightsPageState extends State<UsersearchFlight> {
 
     switch (tripType) {
       case "One Way":
-        page = UsersearchFlight(
+        page = SearchFlightsPage(
           from: widget.from,
           to: widget.to,
           departureDate: widget.departureDate,
@@ -165,7 +165,7 @@ class _SearchFlightsPageState extends State<UsersearchFlight> {
         page = const Home();
         break;
       default:
-        page = UsersearchFlight(
+        page = SearchFlightsPage(
           from: widget.from,
           to: widget.to,
           departureDate: widget.departureDate,
@@ -280,7 +280,7 @@ class _SearchFlightsPageState extends State<UsersearchFlight> {
                               reverseTransitionDuration: Duration.zero,
                               pageBuilder:
                                   (context, animation, secondaryAnimation) =>
-                                      UserFlightBundlesPage(
+                                      FlightBundlesPage(
                                         flight: flight,
                                         adults: widget.adults,
                                         children: widget.children,

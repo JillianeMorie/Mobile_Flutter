@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:ticketing_flutter/public/book.dart';
 import 'package:ticketing_flutter/public/about.dart';
 import 'package:ticketing_flutter/public/explore.dart';
 import 'package:ticketing_flutter/public/travel_info.dart';
@@ -62,17 +61,7 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(_handleTabChange);
-  }
-
-  void _handleTabChange() {
-    if (_tabController.index == 2) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const Book()),
-      );
-    }
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -165,14 +154,13 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
             tabs: const [
               Tab(text: "Seat Sale"),
               Tab(text: "Super Pass"),
-              Tab(text: "Flights"),
             ],
           ),
         ),
 
         body: TabBarView(
           controller: _tabController,
-          children: const [SeatSaleTab(), SuperPassTab(), FlightsTab()],
+          children: const [SeatSaleTab(), SuperPassTab()],
         ),
       ),
     );
@@ -212,14 +200,6 @@ class _BookPageState extends State<BookPage> with TickerProviderStateMixin {
       ),
     );
   }
-}
-
-// --- TAB 3 (Flights) ---
-class FlightsTab extends StatelessWidget {
-  const FlightsTab({super.key});
-
-  @override
-  Widget build(BuildContext context) => const SizedBox.shrink();
 }
 
 // --- TAB 1 (Seat Sale) ---

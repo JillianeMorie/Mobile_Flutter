@@ -4,6 +4,7 @@ import 'package:ticketing_flutter/public/about.dart';
 import 'package:ticketing_flutter/public/explore.dart';
 import 'package:ticketing_flutter/public/travel_info.dart';
 import 'package:ticketing_flutter/auth/login.dart';
+import 'package:ticketing_flutter/user/luggage_map.dart';
 
 class ManagePage extends StatefulWidget {
   const ManagePage({super.key});
@@ -13,6 +14,48 @@ class ManagePage extends StatefulWidget {
 }
 
 class _ManagePageState extends State<ManagePage> {
+  Future<void> _openLuggageTrackerWithInput() async {
+    final controller = TextEditingController();
+    final trackerId = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text(
+          'Luggage Tracker',
+          style: TextStyle(color: Colors.cyanAccent),
+        ),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            labelText: 'Device ID / Tracker Number',
+            labelStyle: const TextStyle(color: Colors.white70),
+            filled: true,
+            fillColor: Colors.grey[800],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.cyanAccent,
+              foregroundColor: Colors.black,
+            ),
+            child: const Text('Track'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted || trackerId == null || trackerId.isEmpty) return;
+    _nav(LuggageMapPage(initialTrackerId: trackerId));
+  }
+
   Widget _drawerItem({
     required IconData icon,
     required String label,
@@ -545,6 +588,14 @@ class _ManagePageState extends State<ManagePage> {
                   );
                 },
               ),
+              const SizedBox(height: 14),
+              ManageSubCard(
+                icon: Icons.location_on_rounded,
+                title: "Luggage Tracker",
+                subtitle: "Enter tracker device ID and track live location",
+                color: Colors.cyanAccent,
+                onTap: _openLuggageTrackerWithInput,
+              ),
 
               const SizedBox(height: 135),
 
@@ -602,7 +653,6 @@ class _ManageMainCardState extends State<ManageMainCard> {
         transform: Matrix4.identity()..scale(scale),
         curve: Curves.easeOut,
         width: double.infinity,
-        height: double.infinity,
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.06),
           borderRadius: BorderRadius.circular(18),
@@ -674,7 +724,6 @@ class _ManageSubCardState extends State<ManageSubCard> {
         transform: Matrix4.identity()..scale(scale),
         curve: Curves.easeOut,
         width: double.infinity,
-        height: double.infinity,
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(18),

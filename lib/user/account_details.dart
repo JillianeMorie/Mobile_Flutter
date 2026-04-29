@@ -4,12 +4,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ticketing_flutter/auth/login.dart';
 import 'package:ticketing_flutter/services/mqtt_service.dart';
 import 'package:ticketing_flutter/services/user_service.dart';
-import 'package:ticketing_flutter/public/manage/manage.dart';
-import 'package:ticketing_flutter/public/travel_info.dart';
-import 'package:ticketing_flutter/public/explore.dart';
+import 'package:ticketing_flutter/user/user_manage/user_manage.dart';
+import 'package:ticketing_flutter/user/user_travel_info.dart';
+import 'package:ticketing_flutter/user/user_explore.dart';
 import 'package:ticketing_flutter/user/userabout.dart';
 import 'package:ticketing_flutter/user/user_tracker_map_page.dart';
-import 'package:ticketing_flutter/public/bookpage.dart';
+import 'package:ticketing_flutter/user/user_bookpage.dart';
 import 'dart:convert';
 
 class UserAccountDetailsPage extends StatefulWidget {
@@ -28,8 +28,17 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
   String? _luggageStatus;
   bool _isSearchingLuggage = false;
   final MqttLocationService _mqttLocationService = MqttLocationService();
+
+  /// Same topic you use in HiveMQ WebSockets Client (Publish).
+  final TextEditingController _mqttTopicController = TextEditingController(
+    text: 'jose/betonio/airtag',
+  );
   double? _lastLatitude;
   double? _lastLongitude;
+
+  /// Public HiveMQ broker (TCP). Web client uses WebSockets to the same broker.
+  static const String _mqttBroker = 'broker.hivemq.com';
+  static const int _mqttPort = 1883;
 
   @override
   void initState() {
@@ -39,6 +48,7 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
 
   @override
   void dispose() {
+    _mqttTopicController.dispose();
     _mqttLocationService.disconnect();
     super.dispose();
   }
@@ -62,7 +72,9 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
     }
 
     final user = await userService.getCurrentUser();
-    final bookedFlights = await _loadBookedFlights();
+    final bookedFlights = user == null
+        ? <Map<String, dynamic>>[]
+        : await _loadBookedFlights(user);
     if (mounted) {
       setState(() {
         _user = user;
@@ -72,9 +84,29 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
     }
   }
 
-  Future<List<Map<String, dynamic>>> _loadBookedFlights() async {
+  String _bookingHistoryKeyForUser(Map<String, dynamic> user) {
+    final userIdRaw =
+        user['UserId'] ?? user['userId'] ?? user['Id'] ?? user['id'];
+    final userId = userIdRaw?.toString().trim();
+    if (userId != null && userId.isNotEmpty) {
+      return 'user_booking_history_$userId';
+    }
+
+    final emailRaw = user['Email'] ?? user['email'];
+    final email = emailRaw?.toString().trim().toLowerCase();
+    if (email != null && email.isNotEmpty) {
+      return 'user_booking_history_$email';
+    }
+
+    // Last fallback, kept for safety when user payload is incomplete.
+    return 'user_booking_history';
+  }
+
+  Future<List<Map<String, dynamic>>> _loadBookedFlights(
+    Map<String, dynamic> user,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
-    const key = 'user_booking_history';
+    final key = _bookingHistoryKeyForUser(user);
     final raw = prefs.getString(key);
     if (raw == null || raw.isEmpty) return [];
     try {
@@ -107,11 +139,11 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
   }
 
   Future<void> _trackLuggage() async {
-    final trackerId = _autoTrackerId;
-    if (trackerId == null || trackerId.isEmpty) {
+    final topic = _mqttTopicController.text.trim();
+    if (topic.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('No tracker ID found for this account yet'),
+          content: Text('Enter MQTT topic'),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 3),
         ),
@@ -120,15 +152,18 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
     }
     setState(() {
       _isSearchingLuggage = true;
-      _luggageStatus = 'Connecting to tracker...';
+      _luggageStatus = 'Connecting to MQTT...';
+      _lastLatitude = null;
+      _lastLongitude = null;
     });
 
     await _mqttLocationService.disconnect();
 
     await _mqttLocationService.subscribeToTracker(
-      broker: '192.168.57.163',
-      port: 1883,
-      topic: 'jose/betonio/loc',
+      broker: _mqttBroker,
+      port: _mqttPort,
+      trackerId: null,
+      topic: topic,
       useWebSocket: false,
       useTls: false,
       onStatus: (status) {
@@ -160,35 +195,6 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
         });
       },
     );
-  }
-
-  String? get _autoTrackerId {
-    // Test mode: fixed tracker id to match terminal publish command.
-    return 'tracker123';
-
-    /*
-    if (_bookedFlights.isNotEmpty) {
-      final latest = _bookedFlights.first;
-      final candidates = [
-        latest['trackerId'],
-        latest['luggageTrackerId'],
-        latest['tagNumber'],
-        latest['bookingRef'],
-      ];
-      for (final candidate in candidates) {
-        final value = candidate?.toString().trim();
-        if (value != null && value.isNotEmpty) {
-          return value;
-        }
-      }
-    }
-
-    final userId = _readField(['UserId', 'userId', 'id']);
-    if (userId != null && userId.trim().isNotEmpty) {
-      return 'user_$userId';
-    }
-    return null;
-    */
   }
 
   Widget _buildInfoItem(String label, String value) {
@@ -253,13 +259,38 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            _autoTrackerId == null
-                ? 'Topic: jose/betonio/loc'
-                : 'Topic: jose/betonio/loc (Tracker: $_autoTrackerId)',
+            'Broker: $_mqttBroker:$_mqttPort (HiveMQ — same as WebSockets client)\n'
+            'Publish JSON: {"latitude": …, "longitude": …} to the topic below.',
             style: const TextStyle(
-              fontSize: 14,
+              fontSize: 13,
               color: Colors.black54,
-              fontWeight: FontWeight.w600,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _mqttTopicController,
+            textInputAction: TextInputAction.done,
+            scrollPadding: const EdgeInsets.only(bottom: 120, top: 100),
+            decoration: InputDecoration(
+              labelText: 'MQTT topic',
+              hintText: 'jose/betonio/airtag',
+              filled: true,
+              fillColor: Colors.grey.shade50,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: Color(0xFF1E3A8A),
+                  width: 2,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -481,6 +512,7 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
     }
 
     return SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -527,24 +559,6 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
           _buildBookedFlightsSection(),
           const SizedBox(height: 24),
           _buildLuggageTracker(),
-          const SizedBox(height: 24),
-          SizedBox(
-            height: 56,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 5, 23, 37),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onPressed: _logout,
-              child: const Text(
-                'Logout',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -562,7 +576,7 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
     final gender = _readField(['Gender', 'gender']);
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       drawer: Drawer(
         width: 300.0,
         backgroundColor: const Color(0xFF111827),
@@ -600,7 +614,7 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
                   context,
                   PageRouteBuilder(
                     pageBuilder: (context, animation1, animation2) =>
-                        const FlightBookingApp(),
+                        const UserFlightBookingApp(),
                     transitionDuration: Duration.zero,
                   ),
                 );
@@ -618,7 +632,7 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
                   context,
                   PageRouteBuilder(
                     pageBuilder: (context, animation1, animation2) =>
-                        const ManagePage(),
+                        const UserManagePage(),
                     transitionDuration: Duration.zero,
                   ),
                 );
@@ -636,7 +650,7 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
                   context,
                   PageRouteBuilder(
                     pageBuilder: (context, animation1, animation2) =>
-                        const TravelInfoPage(),
+                        const UserTravelInfoPage(),
                     transitionDuration: Duration.zero,
                   ),
                 );
@@ -654,7 +668,7 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
                   context,
                   PageRouteBuilder(
                     pageBuilder: (context, animation1, animation2) =>
-                        const ExplorePage(),
+                        const UserExplore(),
                     transitionDuration: Duration.zero,
                   ),
                 );
@@ -683,6 +697,17 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
               ),
               onTap: () {
                 Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.white),
+              title: const Text(
+                'Logout',
+                style: TextStyle(color: Colors.white),
+              ),
+              onTap: () async {
+                Navigator.pop(context);
+                await _logout();
               },
             ),
           ],

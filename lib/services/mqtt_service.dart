@@ -44,14 +44,18 @@ class MqttLocationService {
       onError('No MQTT topic provided.');
       return;
     }
-    final clientId = 'flutter_${DateTime.now().millisecondsSinceEpoch}';
+    // MQTT 3.1.1 client id max 23 chars.
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    final clientId = 'fl${stamp % 10000000000000}';
     final client = MqttServerClient(broker, clientId)
       ..port = port
       ..keepAlivePeriod = 20
       ..logging(on: false)
       ..useWebSocket = useWebSocket
       ..secure = useTls
-      ..autoReconnect = true
+      ..autoReconnect = true;
+    client.setProtocolV311();
+    client
       ..onConnected = () {
         if (currentVersion != _subscriptionVersion) return;
         hasConnectedOnce = true;
@@ -72,10 +76,10 @@ class MqttLocationService {
       if (currentVersion != _subscriptionVersion) return;
       onStatus('Subscribed to $subscribedTopic');
     };
+    // Do not set Will QoS without will topic + message — brokers reject that CONNECT.
     client.connectionMessage = MqttConnectMessage()
         .withClientIdentifier(clientId)
-        .startClean()
-        .withWillQos(MqttQos.atLeastOnce);
+        .startClean();
 
     try {
       onStatus(

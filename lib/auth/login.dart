@@ -21,6 +21,7 @@ class _LoginPageState extends State<LoginPage> {
   );
   final TextEditingController passwordController = TextEditingController();
   bool _isSubmitting = false;
+  bool _isPasswordVisible = false;
 
   @override
   void dispose() {
@@ -32,6 +33,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -91,12 +93,25 @@ class _LoginPageState extends State<LoginPage> {
                 // Password input
                 TextField(
                   controller: passwordController,
-                  obscureText: true,
+                  obscureText: !_isPasswordVisible,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     labelText: "Password",
                     labelStyle: const TextStyle(color: Colors.white70),
                     prefixIcon: const Icon(Icons.lock, color: Colors.white),
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;
+                        });
+                      },
+                      icon: Icon(
+                        _isPasswordVisible
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.white70,
+                      ),
+                    ),
                     enabledBorder: OutlineInputBorder(
                       borderSide: const BorderSide(color: Colors.white70),
                       borderRadius: BorderRadius.circular(12),

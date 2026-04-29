@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:ticketing_flutter/public/bookpage.dart';
-import 'package:ticketing_flutter/public/about.dart';
-import 'package:ticketing_flutter/public/explore.dart';
-import 'package:ticketing_flutter/public/travel_info.dart';
-import 'package:ticketing_flutter/auth/login.dart';
+import 'package:ticketing_flutter/user/userabout.dart';
+import 'package:ticketing_flutter/user/user_explore.dart';
+import 'package:ticketing_flutter/user/user_travel_info.dart';
+import 'package:ticketing_flutter/user/account_details.dart';
+import 'package:ticketing_flutter/user/user_bookpage.dart';
 
 class UserManagePage extends StatefulWidget {
   const UserManagePage({super.key});
@@ -380,7 +380,7 @@ class _UserManagePageState extends State<UserManagePage> {
               _drawerItem(
                 icon: Icons.flight,
                 label: 'Book',
-                onTap: () => _navReplace(const FlightBookingApp()),
+                onTap: () => _navReplace(const UserFlightBookingApp()),
               ),
               _drawerItem(
                 icon: Icons.manage_accounts,
@@ -390,22 +390,22 @@ class _UserManagePageState extends State<UserManagePage> {
               _drawerItem(
                 icon: Icons.info,
                 label: 'Travel Info',
-                onTap: () => _nav(const TravelInfoPage()),
+                onTap: () => _nav(const UserTravelInfoPage()),
               ),
               _drawerItem(
                 icon: Icons.explore,
                 label: 'Explore',
-                onTap: () => _nav(const ExplorePage()),
+                onTap: () => _nav(const UserExplore()),
               ),
               _drawerItem(
                 icon: Icons.home,
                 label: 'About',
-                onTap: () => _nav(const About()),
+                onTap: () => _nav(const Userabout()),
               ),
               _drawerItem(
-                icon: Icons.login,
-                label: 'Login',
-                onTap: () => _nav(const LoginPage()),
+                icon: Icons.account_circle,
+                label: 'My Account',
+                onTap: () => _nav(const UserAccountDetailsPage()),
               ),
             ],
           ),
@@ -602,7 +602,6 @@ class _UserManageMainCardState extends State<UserManageMainCard> {
         transform: Matrix4.identity()..scale(scale),
         curve: Curves.easeOut,
         width: double.infinity,
-        height: double.infinity,
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.06),
           borderRadius: BorderRadius.circular(18),
@@ -674,7 +673,6 @@ class _UserManageSubCardState extends State<UserManageSubCard> {
         transform: Matrix4.identity()..scale(scale),
         curve: Curves.easeOut,
         width: double.infinity,
-        height: double.infinity,
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(18),

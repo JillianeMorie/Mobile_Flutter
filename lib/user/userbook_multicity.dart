@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:ticketing_flutter/user/userbook_oneway.dart';
 import 'package:ticketing_flutter/user/userbook_roundtrip.dart';
-import 'package:ticketing_flutter/auth/login.dart';
 import 'package:ticketing_flutter/public/home.dart';
 import 'package:ticketing_flutter/user/account_details.dart';
+import 'package:ticketing_flutter/user/user_bookpage.dart';
+import 'package:ticketing_flutter/user/user_manage/user_manage.dart';
+import 'package:ticketing_flutter/user/user_travel_info.dart';
+import 'package:ticketing_flutter/user/user_explore.dart';
+import 'package:ticketing_flutter/user/userabout.dart';
 
 const List<String> countries = [
   "Philippines - Manila",
@@ -207,6 +211,14 @@ class _UserBookMulticityState extends State<UserBookMulticity> {
               title: const Text('Book', style: TextStyle(color: Colors.white)),
               onTap: () {
                 Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation1, animation2) =>
+                        const UserFlightBookingApp(),
+                    transitionDuration: Duration.zero,
+                  ),
+                );
               },
             ),
             ListTile(
@@ -217,6 +229,14 @@ class _UserBookMulticityState extends State<UserBookMulticity> {
               ),
               onTap: () {
                 Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation1, animation2) =>
+                        const UserManagePage(),
+                    transitionDuration: Duration.zero,
+                  ),
+                );
               },
             ),
             ListTile(
@@ -227,6 +247,14 @@ class _UserBookMulticityState extends State<UserBookMulticity> {
               ),
               onTap: () {
                 Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation1, animation2) =>
+                        const UserTravelInfoPage(),
+                    transitionDuration: Duration.zero,
+                  ),
+                );
               },
             ),
             ListTile(
@@ -237,6 +265,14 @@ class _UserBookMulticityState extends State<UserBookMulticity> {
               ),
               onTap: () {
                 Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation1, animation2) =>
+                        const UserExplore(),
+                    transitionDuration: Duration.zero,
+                  ),
+                );
               },
             ),
             ListTile(
@@ -244,6 +280,14 @@ class _UserBookMulticityState extends State<UserBookMulticity> {
               title: const Text('About', style: TextStyle(color: Colors.white)),
               onTap: () {
                 Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation1, animation2) =>
+                        const Userabout(),
+                    transitionDuration: Duration.zero,
+                  ),
+                );
               },
             ),
             ListTile(

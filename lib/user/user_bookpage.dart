@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:ticketing_flutter/public/book.dart';
-import 'package:ticketing_flutter/public/about.dart';
-import 'package:ticketing_flutter/public/explore.dart';
-import 'package:ticketing_flutter/public/travel_info.dart';
-import 'package:ticketing_flutter/public/manage/manage.dart';
+import 'package:ticketing_flutter/user/userabout.dart';
+import 'package:ticketing_flutter/user/user_explore.dart';
+import 'package:ticketing_flutter/user/user_travel_info.dart';
+import 'package:ticketing_flutter/user/user_manage/user_manage.dart';
 import 'package:ticketing_flutter/user/account_details.dart';
+import 'package:ticketing_flutter/user/user_book.dart';
 
 // --- CEBU PACIFIC INSPIRED COLOR PALETTE ---
 const Color cebPrimaryBlue = Color(0xFF15A7E0);
@@ -63,17 +63,7 @@ class _UserBookPageState extends State<UserBookPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(_handleTabChange);
-  }
-
-  void _handleTabChange() {
-    if (_tabController.index == 2) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const Book()),
-      );
-    }
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -122,22 +112,22 @@ class _UserBookPageState extends State<UserBookPage>
               _drawerItem(
                 icon: Icons.manage_accounts,
                 label: 'Manage',
-                onTap: () => _nav(const ManagePage()),
+                onTap: () => _nav(const UserManagePage()),
               ),
               _drawerItem(
                 icon: Icons.info,
                 label: 'Travel Info',
-                onTap: () => _nav(const TravelInfoPage()),
+                onTap: () => _nav(const UserTravelInfoPage()),
               ),
               _drawerItem(
                 icon: Icons.explore,
                 label: 'Explore',
-                onTap: () => _nav(const ExplorePage()),
+                onTap: () => _nav(const UserExplore()),
               ),
               _drawerItem(
                 icon: Icons.home,
                 label: 'About',
-                onTap: () => _nav(const About()),
+                onTap: () => _nav(const Userabout()),
               ),
 
               _drawerItem(
@@ -166,14 +156,13 @@ class _UserBookPageState extends State<UserBookPage>
             tabs: const [
               Tab(text: "Seat Sale"),
               Tab(text: "Super Pass"),
-              Tab(text: "Flights"),
             ],
           ),
         ),
 
         body: TabBarView(
           controller: _tabController,
-          children: const [UserSeatSaleTab(), UserSuperPassTab(), UserFlightsTab()],
+          children: const [UserSeatSaleTab(), UserSuperPassTab()],
         ),
       ),
     );
@@ -213,14 +202,6 @@ class _UserBookPageState extends State<UserBookPage>
       ),
     );
   }
-}
-
-// --- TAB 3 (Flights) ---
-class UserFlightsTab extends StatelessWidget {
-  const UserFlightsTab({super.key});
-
-  @override
-  Widget build(BuildContext context) => const SizedBox.shrink();
 }
 
 // --- TAB 1 (Seat Sale) ---
@@ -264,7 +245,7 @@ class UserSeatSaleTab extends StatelessWidget {
           context,
           title: "CEB Flexi Promo",
           destination: "Change your flight for FREE!",
-          price: "Add-on starts at ₱499",
+          price: "Book flight now!",
           endDate: "Limited-time offer",
           color: cebDarkBlue,
         ),
@@ -286,11 +267,9 @@ class UserSeatSaleTab extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Viewing \"$title\" details."),
-            duration: const Duration(seconds: 1),
-          ),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const UserBook()),
         ),
         child: Container(
           padding: const EdgeInsets.all(16),
@@ -419,15 +398,14 @@ class UserSuperPassTab extends StatelessWidget {
               ),
             ),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Super Pass purchase coming soon!"),
-                ),
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const UserBook()),
               );
             },
             child: const Center(
               child: Text(
-                "Buy Super Pass",
+                "Book flight now!",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
