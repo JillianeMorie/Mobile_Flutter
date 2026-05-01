@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/widgets/disable_route_pop.dart';
 import 'package:ticketing_flutter/public/booking_summary.dart';
 import 'package:ticketing_flutter/services/flight.dart';
 import 'package:ticketing_flutter/services/user_service.dart';
@@ -273,7 +274,7 @@ class _GuestDetailsPageState extends State<GuestDetailsPage> {
       }
     }
 
-    return Scaffold(
+    return DisableRoutePop(child: Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -363,6 +364,7 @@ class _GuestDetailsPageState extends State<GuestDetailsPage> {
           ),
         ),
       ),
+    ),
     );
   }
 

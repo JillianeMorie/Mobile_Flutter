@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/widgets/disable_route_pop.dart';
 import 'package:ticketing_flutter/user/user_bookpage.dart';
 import 'package:ticketing_flutter/user/userabout.dart';
 import 'package:ticketing_flutter/user/user_explore.dart';
 import 'package:ticketing_flutter/user/user_manage/user_manage.dart';
 import 'package:ticketing_flutter/user/account_details.dart';
+import 'package:ticketing_flutter/user/user_logout.dart';
 
 class UserTravelInfoPage extends StatefulWidget {
   const UserTravelInfoPage({super.key});
@@ -50,7 +52,7 @@ class _UserTravelInfoPageState extends State<UserTravelInfoPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return DisableRoutePop(child: Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -113,6 +115,11 @@ class _UserTravelInfoPageState extends State<UserTravelInfoPage> {
                 label: 'My Account',
                 onTap: () => _nav(const UserAccountDetailsPage()),
               ),
+              _drawerItem(
+                icon: Icons.logout,
+                label: 'Logout',
+                onTap: () => logoutUserAndShowLogin(context),
+              ),
             ],
           ),
         ),
@@ -159,6 +166,7 @@ class _UserTravelInfoPageState extends State<UserTravelInfoPage> {
           ),
         ),
       ),
+    ),
     );
   }
 

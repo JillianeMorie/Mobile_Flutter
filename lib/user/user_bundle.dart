@@ -115,19 +115,42 @@ class _FlightBundlesPageState extends State<UserFlightBundlesPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 🌟 Header
-                  const Text(
-                    "Choose Your Bundle",
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    "Select the best option for your trip",
-                    style: TextStyle(fontSize: 16, color: Colors.white70),
+                  // 🌟 Header + back
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      IconButton(
+                        tooltip: 'Back',
+                        icon: const Icon(
+                          Icons.arrow_back,
+                          color: Colors.white,
+                        ),
+                        onPressed: () => Navigator.maybePop(context),
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              "Choose Your Bundle",
+                              style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              "Select the best option for your trip",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 12),
                   // 🧩 Bundles — scrollable and closer to header

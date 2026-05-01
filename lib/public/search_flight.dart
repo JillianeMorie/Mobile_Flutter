@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/widgets/disable_route_pop.dart';
 import 'package:ticketing_flutter/services/flight.dart';
 import 'package:ticketing_flutter/public/home.dart';
 import 'package:ticketing_flutter/public/bundle.dart';
@@ -196,7 +197,7 @@ class _SearchFlightsPageState extends State<SearchFlightsPage> {
       }
     }
 
-    return Scaffold(
+    return DisableRoutePop(child: Scaffold(
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -316,6 +317,7 @@ class _SearchFlightsPageState extends State<SearchFlightsPage> {
           ),
         ],
       ),
+    ),
     );
   }
 }

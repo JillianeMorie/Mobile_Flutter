@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/widgets/disable_route_pop.dart';
 import 'package:ticketing_flutter/services/mqtt_service.dart';
 
 class LuggageMapPage extends StatefulWidget {
@@ -97,7 +98,7 @@ class _LuggageMapPageState extends State<LuggageMapPage> {
     final lngText = _lastData?.longitude?.toStringAsFixed(6) ?? '-';
     final tsText = _lastData?.timestamp ?? '-';
 
-    return Scaffold(
+    return DisableRoutePop(child: Scaffold(
       appBar: AppBar(title: const Text('Luggage Tracker')),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -166,6 +167,7 @@ class _LuggageMapPageState extends State<LuggageMapPage> {
           ],
         ),
       ),
+    ),
     );
   }
 }

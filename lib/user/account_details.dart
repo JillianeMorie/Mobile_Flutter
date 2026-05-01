@@ -1,16 +1,23 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/widgets/disable_route_pop.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ticketing_flutter/auth/login.dart';
 import 'package:ticketing_flutter/services/mqtt_service.dart';
 import 'package:ticketing_flutter/services/user_service.dart';
+import 'package:ticketing_flutter/services/api_client.dart';
+import 'package:ticketing_flutter/services/user_booking_record_service.dart';
+import 'package:ticketing_flutter/services/user_luggage_tracker_service.dart';
+import 'package:ticketing_flutter/user/user_logout.dart';
 import 'package:ticketing_flutter/user/user_manage/user_manage.dart';
 import 'package:ticketing_flutter/user/user_travel_info.dart';
 import 'package:ticketing_flutter/user/user_explore.dart';
 import 'package:ticketing_flutter/user/userabout.dart';
 import 'package:ticketing_flutter/user/user_tracker_map_page.dart';
 import 'package:ticketing_flutter/user/user_bookpage.dart';
-import 'dart:convert';
 
 class UserAccountDetailsPage extends StatefulWidget {
   const UserAccountDetailsPage({super.key});
@@ -29,16 +36,24 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
   bool _isSearchingLuggage = false;
   final MqttLocationService _mqttLocationService = MqttLocationService();
 
-  /// Same topic you use in HiveMQ WebSockets Client (Publish).
-  final TextEditingController _mqttTopicController = TextEditingController(
-    text: 'jose/betonio/airtag',
-  );
+  final TextEditingController _mqttTopicController = TextEditingController();
   double? _lastLatitude;
   double? _lastLongitude;
+  DateTime? _lastLuggageLocationPersistUtc;
+
+  static const Duration _luggageNoSignalTimeout = Duration(seconds: 25);
+  int _luggageTrackSession = 0;
+  bool _luggageGotValidGpsFix = false;
+  bool _luggageTrackerFailed = false;
+  Timer? _luggageNoSignalTimer;
 
   /// Public HiveMQ broker (TCP). Web client uses WebSockets to the same broker.
   static const String _mqttBroker = 'broker.hivemq.com';
   static const int _mqttPort = 1883;
+
+  /// Shown while MQTT connects/subscribes — broker accepts any topic string; that is not device validation.
+  static const String _luggageAwaitingGpsMessage =
+      'Waiting for luggage data…\n';
 
   @override
   void initState() {
@@ -48,9 +63,33 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
 
   @override
   void dispose() {
+    _luggageNoSignalTimer?.cancel();
     _mqttTopicController.dispose();
     _mqttLocationService.disconnect();
     super.dispose();
+  }
+
+  void _cancelLuggageNoSignalTimer() {
+    _luggageNoSignalTimer?.cancel();
+    _luggageNoSignalTimer = null;
+  }
+
+  void _beginLuggageNoSignalWatch(int session) {
+    _cancelLuggageNoSignalTimer();
+    _luggageNoSignalTimer = Timer(_luggageNoSignalTimeout, () async {
+      if (!mounted || session != _luggageTrackSession) return;
+      if (_luggageGotValidGpsFix) return;
+      await _mqttLocationService.disconnect();
+      if (!mounted || session != _luggageTrackSession) return;
+      setState(() {
+        _isSearchingLuggage = false;
+        _luggageTrackerFailed = true;
+        _luggageStatus =
+            'No luggage signal for this device ID. Check the ID and try again.';
+        _lastLatitude = null;
+        _lastLongitude = null;
+      });
+    });
   }
 
   Future<void> _loadUser() async {
@@ -84,6 +123,30 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
     }
   }
 
+  void _maybePersistLocationFromMqtt(
+    String statusText,
+    double lat,
+    double lng,
+  ) {
+    if (ApiClient.useMock) return;
+    final now = DateTime.now();
+    if (_lastLuggageLocationPersistUtc != null &&
+        now.difference(_lastLuggageLocationPersistUtc!) <
+            const Duration(seconds: 12)) {
+      return;
+    }
+    _lastLuggageLocationPersistUtc = now;
+    var text = statusText;
+    if (text.length > 500) text = text.substring(0, 500);
+    unawaited(
+      UserLuggageTrackerService().upsert(
+        lastLatitude: lat,
+        lastLongitude: lng,
+        lastStatusText: text,
+      ),
+    );
+  }
+
   String _bookingHistoryKeyForUser(Map<String, dynamic> user) {
     final userIdRaw =
         user['UserId'] ?? user['userId'] ?? user['Id'] ?? user['id'];
@@ -105,6 +168,13 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
   Future<List<Map<String, dynamic>>> _loadBookedFlights(
     Map<String, dynamic> user,
   ) async {
+    if (!ApiClient.useMock) {
+      final fromApi = await UserBookingRecordService().fetchMineNormalized();
+      if (fromApi != null) {
+        return fromApi;
+      }
+    }
+
     final prefs = await SharedPreferences.getInstance();
     final key = _bookingHistoryKeyForUser(user);
     final raw = prefs.getString(key);
@@ -128,14 +198,7 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
   }
 
   Future<void> _logout() async {
-    final service = UserService();
-    await service.logout();
-    if (!mounted) return;
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-      (route) => false,
-    );
+    await logoutUserAndShowLogin(context);
   }
 
   Future<void> _trackLuggage() async {
@@ -143,19 +206,32 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
     if (topic.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Enter MQTT topic'),
+          content: Text('Enter device ID'),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 3),
         ),
       );
       return;
     }
+
+    _luggageTrackSession++;
+    final session = _luggageTrackSession;
+    _luggageGotValidGpsFix = false;
+    _luggageTrackerFailed = false;
+    _cancelLuggageNoSignalTimer();
+
     setState(() {
       _isSearchingLuggage = true;
-      _luggageStatus = 'Connecting to MQTT...';
+      _luggageStatus = 'Connecting…';
       _lastLatitude = null;
       _lastLongitude = null;
     });
+
+    _beginLuggageNoSignalWatch(session);
+
+    if (!ApiClient.useMock) {
+      unawaited(UserLuggageTrackerService().upsert(mqttTopic: topic));
+    }
 
     await _mqttLocationService.disconnect();
 
@@ -168,30 +244,58 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
       useTls: false,
       onStatus: (status) {
         if (!mounted) return;
+        if (status.contains('Disconnected from MQTT')) {
+          return;
+        }
+        final connecting = status.toLowerCase().contains('connecting');
         setState(() {
-          _isSearchingLuggage = false;
-          _luggageStatus = status;
+          _luggageTrackerFailed = false;
+          _isSearchingLuggage = true;
+          _luggageStatus = connecting
+              ? 'Connecting…'
+              : _luggageAwaitingGpsMessage;
         });
       },
       onData: (data) {
         if (!mounted) return;
+        final lat = data.latitude;
+        final lng = data.longitude;
+        var statusForPersist = _luggageStatus ?? '';
+        if (lat != null && lng != null) {
+          _luggageGotValidGpsFix = true;
+          _cancelLuggageNoSignalTimer();
+        }
         setState(() {
-          if (data.latitude != null && data.longitude != null) {
-            _lastLatitude = data.latitude;
-            _lastLongitude = data.longitude;
+          if (lat != null && lng != null) {
+            _luggageTrackerFailed = false;
+            _isSearchingLuggage = false;
+            _lastLatitude = lat;
+            _lastLongitude = lng;
             final ts = data.timestamp ?? DateTime.now().toIso8601String();
-            _luggageStatus =
-                'Live GPS\nLat: ${data.latitude}\nLng: ${data.longitude}\nUpdated: $ts';
+            _luggageStatus = 'Live GPS\nLat: $lat\nLng: $lng\nUpdated: $ts';
+            statusForPersist = _luggageStatus!;
           } else {
-            _luggageStatus = 'MQTT payload: ${data.rawPayload}';
+            _isSearchingLuggage = true;
+            _luggageTrackerFailed = false;
+            _luggageStatus =
+                '$_luggageAwaitingGpsMessage\n\n'
+                'Last message had no latitude/longitude — check device ID, topic, or payload format.';
+            statusForPersist = _luggageStatus!;
           }
         });
+        if (lat != null && lng != null) {
+          _maybePersistLocationFromMqtt(statusForPersist, lat, lng);
+        }
       },
       onError: (error) {
+        _cancelLuggageNoSignalTimer();
         if (!mounted) return;
         setState(() {
           _isSearchingLuggage = false;
-          _luggageStatus = error;
+          _luggageTrackerFailed = true;
+          _lastLatitude = null;
+          _lastLongitude = null;
+          _luggageStatus = 'Not connected\nFailed\n$error';
         });
       },
     );
@@ -258,23 +362,12 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
             ],
           ),
           const SizedBox(height: 16),
-          Text(
-            'Broker: $_mqttBroker:$_mqttPort (HiveMQ — same as WebSockets client)\n'
-            'Publish JSON: {"latitude": …, "longitude": …} to the topic below.',
-            style: const TextStyle(
-              fontSize: 13,
-              color: Colors.black54,
-              height: 1.35,
-            ),
-          ),
-          const SizedBox(height: 12),
           TextField(
             controller: _mqttTopicController,
             textInputAction: TextInputAction.done,
             scrollPadding: const EdgeInsets.only(bottom: 120, top: 100),
             decoration: InputDecoration(
-              labelText: 'MQTT topic',
-              hintText: 'jose/betonio/airtag',
+              labelText: 'Enter Device ID:',
               filled: true,
               fillColor: Colors.grey.shade50,
               border: OutlineInputBorder(
@@ -326,25 +419,63 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
           ),
           if (_luggageStatus != null) ...[
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.shade200),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.green, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _luggageStatus!,
-                      style: const TextStyle(fontSize: 14),
-                    ),
+            Builder(
+              builder: (context) {
+                final failed = _luggageTrackerFailed;
+                final live = (_luggageStatus ?? '').startsWith('Live GPS');
+                final pending = !failed && !live;
+                final bg = failed
+                    ? Colors.red.shade50
+                    : live
+                    ? Colors.green.shade50
+                    : Colors.blue.shade50;
+                final border = failed
+                    ? Colors.red.shade200
+                    : live
+                    ? Colors.green.shade200
+                    : Colors.blue.shade200;
+                final iconColor = failed
+                    ? Colors.red.shade700
+                    : live
+                    ? Colors.green
+                    : Colors.blue.shade700;
+                final icon = failed
+                    ? Icons.error_outline
+                    : live
+                    ? Icons.check_circle
+                    : Icons.hourglass_top;
+                return Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: bg,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: border),
                   ),
-                ],
-              ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(icon, color: iconColor, size: 22),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _luggageStatus!,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: failed
+                                ? Colors.red.shade900
+                                : pending
+                                ? Colors.blue.shade900
+                                : Colors.black87,
+                            fontWeight: (failed || pending)
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ],
           if (_lastLatitude != null && _lastLongitude != null) ...[
@@ -575,152 +706,21 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
     }
     final gender = _readField(['Gender', 'gender']);
 
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      drawer: Drawer(
-        width: 300.0,
-        backgroundColor: const Color(0xFF111827),
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            GestureDetector(
-              onTap: () {
-                Navigator.pop(context);
-              },
-              child: const DrawerHeader(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFF000000),
-                      Color(0xFF111827),
-                      Color(0xFF1E3A8A),
-                    ],
-                  ),
-                ),
-                child: Text(
-                  'Menu',
-                  style: TextStyle(color: Colors.white, fontSize: 24),
-                ),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.flight, color: Colors.white),
-              title: const Text('Book', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) =>
-                        const UserFlightBookingApp(),
-                    transitionDuration: Duration.zero,
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.manage_accounts, color: Colors.white),
-              title: const Text(
-                'Manage',
-                style: TextStyle(color: Colors.white),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) =>
-                        const UserManagePage(),
-                    transitionDuration: Duration.zero,
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.info, color: Colors.white),
-              title: const Text(
-                'Travel Info',
-                style: TextStyle(color: Colors.white),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) =>
-                        const UserTravelInfoPage(),
-                    transitionDuration: Duration.zero,
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.explore, color: Colors.white),
-              title: const Text(
-                'Explore',
-                style: TextStyle(color: Colors.white),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) =>
-                        const UserExplore(),
-                    transitionDuration: Duration.zero,
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.home, color: Colors.white),
-              title: const Text('About', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) =>
-                        const Userabout(),
-                    transitionDuration: Duration.zero,
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.account_circle, color: Colors.white),
-              title: const Text(
-                'My Account',
-                style: TextStyle(color: Colors.white),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.white),
-              title: const Text(
-                'Logout',
-                style: TextStyle(color: Colors.white),
-              ),
-              onTap: () async {
-                Navigator.pop(context);
-                await _logout();
-              },
-            ),
-          ],
-        ),
-      ),
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              Expanded(
-                flex: 1,
-                child: Container(
-                  decoration: const BoxDecoration(
+    return DisableRoutePop(
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        drawer: Drawer(
+          width: 300.0,
+          backgroundColor: const Color(0xFF111827),
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                },
+                child: const DrawerHeader(
+                  decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -731,44 +731,183 @@ class _UserAccountDetailsPageState extends State<UserAccountDetailsPage> {
                       ],
                     ),
                   ),
+                  child: Text(
+                    'Menu',
+                    style: TextStyle(color: Colors.white, fontSize: 24),
+                  ),
                 ),
               ),
-              Expanded(
-                flex: 1,
-                child: Container(
-                  color: Colors.blue.shade100,
-                  width: double.infinity,
+              ListTile(
+                leading: const Icon(Icons.flight, color: Colors.white),
+                title: const Text(
+                  'Book',
+                  style: TextStyle(color: Colors.white),
                 ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation1, animation2) =>
+                          const UserFlightBookingApp(),
+                      transitionDuration: Duration.zero,
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.manage_accounts, color: Colors.white),
+                title: const Text(
+                  'Manage',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation1, animation2) =>
+                          const UserManagePage(),
+                      transitionDuration: Duration.zero,
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.info, color: Colors.white),
+                title: const Text(
+                  'Travel Info',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation1, animation2) =>
+                          const UserTravelInfoPage(),
+                      transitionDuration: Duration.zero,
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.explore, color: Colors.white),
+                title: const Text(
+                  'Explore',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation1, animation2) =>
+                          const UserExplore(),
+                      transitionDuration: Duration.zero,
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.home, color: Colors.white),
+                title: const Text(
+                  'About',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation1, animation2) =>
+                          const Userabout(),
+                      transitionDuration: Duration.zero,
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.account_circle, color: Colors.white),
+                title: const Text(
+                  'My Account',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.white),
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _logout();
+                },
               ),
             ],
           ),
-          Positioned(
-            top: 30,
-            left: 10,
-            child: Builder(
-              builder: (context) {
-                return IconButton(
-                  icon: const Icon(Icons.menu, color: Colors.white, size: 30),
-                  onPressed: () {
-                    Scaffold.of(context).openDrawer();
-                  },
-                );
-              },
+        ),
+        body: Stack(
+          children: [
+            Column(
+              children: [
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF000000),
+                          Color(0xFF111827),
+                          Color(0xFF1E3A8A),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    color: Colors.blue.shade100,
+                    width: double.infinity,
+                  ),
+                ),
+              ],
             ),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 80, 20, 20),
-              child: _buildContent(
-                fullName: fullName,
-                email: email,
-                phone: phone,
-                dob: dob,
-                gender: gender,
+            Positioned(
+              top: 30,
+              left: 10,
+              child: Builder(
+                builder: (context) {
+                  return IconButton(
+                    icon: const Icon(Icons.menu, color: Colors.white, size: 30),
+                    onPressed: () {
+                      Scaffold.of(context).openDrawer();
+                    },
+                  );
+                },
               ),
             ),
-          ),
-        ],
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 80, 20, 20),
+                child: _buildContent(
+                  fullName: fullName,
+                  email: email,
+                  phone: phone,
+                  dob: dob,
+                  gender: gender,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

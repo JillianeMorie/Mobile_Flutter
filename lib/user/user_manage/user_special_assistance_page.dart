@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/widgets/disable_route_pop.dart';
 
 class UserSpecialAssistancePage extends StatelessWidget {
   const UserSpecialAssistancePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return DisableRoutePop(child: Scaffold(
       backgroundColor: const Color(0xFF1E3A8A),
       appBar: AppBar(
         title: const Text('Special Assistance'),
@@ -74,6 +75,7 @@ class UserSpecialAssistancePage extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 

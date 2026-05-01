@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/widgets/disable_route_pop.dart';
 import 'package:ticketing_flutter/user/userbook_oneway.dart';
 import 'package:ticketing_flutter/user/userbook_multicity.dart';
 import 'package:ticketing_flutter/services/countries.dart';
@@ -9,6 +10,7 @@ import 'package:ticketing_flutter/user/user_manage/user_manage.dart';
 import 'package:ticketing_flutter/user/user_travel_info.dart';
 import 'package:ticketing_flutter/user/user_explore.dart';
 import 'package:ticketing_flutter/user/userabout.dart';
+import 'package:ticketing_flutter/user/user_logout.dart';
 
 class UserBookRoundtrip extends StatefulWidget {
   const UserBookRoundtrip({super.key});
@@ -220,7 +222,7 @@ class _UserBookRoundtrip extends State<UserBookRoundtrip> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return DisableRoutePop(child: Scaffold(
       resizeToAvoidBottomInset: false,
       drawer: Drawer(
         width: 300.0,
@@ -350,6 +352,17 @@ class _UserBookRoundtrip extends State<UserBookRoundtrip> {
                     transitionDuration: Duration.zero,
                   ),
                 );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.white),
+              title: const Text(
+                'Logout',
+                style: TextStyle(color: Colors.white),
+              ),
+              onTap: () async {
+                Navigator.pop(context);
+                await logoutUserAndShowLogin(context);
               },
             ),
           ],
@@ -653,6 +666,7 @@ class _UserBookRoundtrip extends State<UserBookRoundtrip> {
           );
         },
       ),
+    ),
     );
   }
 

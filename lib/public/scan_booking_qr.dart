@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/widgets/disable_route_pop.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:ticketing_flutter/public/booking_confirmation.dart';
 import 'package:ticketing_flutter/services/flight.dart';
@@ -81,7 +82,7 @@ class _ScanBookingQrPageState extends State<ScanBookingQrPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return DisableRoutePop(child: Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
@@ -122,6 +123,7 @@ class _ScanBookingQrPageState extends State<ScanBookingQrPage> {
           ),
         ],
       ),
+    ),
     );
   }
 }

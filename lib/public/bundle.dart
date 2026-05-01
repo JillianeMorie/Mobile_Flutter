@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/widgets/disable_route_pop.dart';
 import 'package:ticketing_flutter/services/flight.dart';
 import 'guest_details_page.dart';
 import 'user_booking_details.dart';
@@ -80,7 +81,7 @@ class _FlightBundlesPageState extends State<FlightBundlesPage> {
       }
     }
 
-    return Scaffold(
+    return DisableRoutePop(child: Scaffold(
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
@@ -296,6 +297,7 @@ class _FlightBundlesPageState extends State<FlightBundlesPage> {
           ),
         ],
       ),
+    ),
     );
   }
 }

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/widgets/disable_route_pop.dart';
 
 class CheckInPage extends StatelessWidget {
   const CheckInPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return DisableRoutePop(child: Scaffold(
       backgroundColor: const Color(0xFF1E3A8A),
       appBar: AppBar(
         title: const Text('Check-In'),
@@ -96,6 +97,7 @@ class CheckInPage extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }

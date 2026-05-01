@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ticketing_flutter/services/api_client.dart';
 import 'package:ticketing_flutter/user/user_booking_confirmation.dart';
 import 'package:ticketing_flutter/services/flight.dart';
+import 'package:ticketing_flutter/services/user_booking_record_service.dart';
 import 'dart:convert';
 
 class UserPaymentPage extends StatefulWidget {
@@ -11,7 +12,7 @@ class UserPaymentPage extends StatefulWidget {
   @override
   State<UserPaymentPage> createState() => _UserPaymentPageState();
 }
-
+  
 class _UserPaymentPageState extends State<UserPaymentPage> {
   String? _method; // 'cash' | 'maya' | 'card'
   final _cardName = TextEditingController();
@@ -88,6 +89,9 @@ class _UserPaymentPageState extends State<UserPaymentPage> {
 
     existing.insert(0, bookingEntry);
     await prefs.setString(key, jsonEncode(existing));
+
+    // Persist same snapshot to SQL Server when logged in with a valid session.
+    await UserBookingRecordService().createFromLocalEntry(bookingEntry);
   }
 
   @override
@@ -159,15 +163,28 @@ class _UserPaymentPageState extends State<UserPaymentPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
-                  "Payment",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                  ),
-                  textAlign: TextAlign.center,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      tooltip: 'Back',
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.maybePop(context),
+                    ),
+                    const Expanded(
+                      child: Text(
+                        "Payment",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(width: 48),
+                  ],
                 ),
                 const SizedBox(height: 20),
 
@@ -304,9 +321,20 @@ class _UserPaymentPageState extends State<UserPaymentPage> {
                             !hasBookingData)
                         ? null
                         : () async {
-                            // Show processing dialog immediately (do not await it).
-                            showDialog(
+                            // `showDialog` defaults to the root navigator. Calling
+                            // `Navigator.pop(context)` after the delay used the
+                            // nearest navigator, which could pop this route instead
+                            // of the dialog—so the payment page disappeared and
+                            // `pushReplacement` never ran (user landed on summary).
+                            if (!mounted) return;
+                            final navigator = Navigator.of(
+                              context,
+                              rootNavigator: true,
+                            );
+
+                            showDialog<void>(
                               context: context,
+                              useRootNavigator: true,
                               barrierDismissible: false,
                               builder: (ctx) => AlertDialog(
                                 backgroundColor: const Color(0xFF111827),
@@ -332,11 +360,10 @@ class _UserPaymentPageState extends State<UserPaymentPage> {
                                 ? const Duration(seconds: 5)
                                 : const Duration(seconds: 1);
                             await Future.delayed(processingDelay);
-                            if (context.mounted) {
-                              Navigator.pop(context); // Close loading dialog
-                            }
+                            if (!mounted) return;
+                            navigator.pop();
 
-                            if (!context.mounted) return;
+                            if (!mounted) return;
 
                             final methodLabel = _method == 'cash'
                                 ? 'Cash'
@@ -362,8 +389,8 @@ class _UserPaymentPageState extends State<UserPaymentPage> {
                               paymentMethod: methodLabel,
                               total: totalAmount,
                             );
-                            Navigator.pushReplacement(
-                              context,
+                            if (!mounted) return;
+                            await navigator.pushReplacement(
                               PageRouteBuilder(
                                 pageBuilder:
                                     (context, animation, secondaryAnimation) =>

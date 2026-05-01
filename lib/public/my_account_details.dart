@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/widgets/disable_route_pop.dart';
 import 'package:ticketing_flutter/services/mqtt_service.dart';
 import 'package:ticketing_flutter/services/user_service.dart';
 import 'package:ticketing_flutter/user/user_tracker_map_page.dart';
@@ -324,7 +325,7 @@ class _MyAccountDetailsPageState extends State<MyAccountDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return DisableRoutePop(child: Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -429,6 +430,7 @@ class _MyAccountDetailsPageState extends State<MyAccountDetailsPage> {
           ),
         ),
       ),
+    ),
     );
   }
 }

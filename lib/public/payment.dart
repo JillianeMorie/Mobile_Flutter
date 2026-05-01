@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/widgets/disable_route_pop.dart';
 import 'package:ticketing_flutter/public/home.dart';
 import 'package:ticketing_flutter/public/booking_confirmation.dart';
 import 'package:ticketing_flutter/services/flight.dart';
@@ -75,7 +76,7 @@ class _PaymentPageState extends State<PaymentPage> {
         ? args['infants'] as int
         : null;
 
-    return Scaffold(
+    return DisableRoutePop(child: Scaffold(
       extendBodyBehindAppBar: true,
       body: Container(
         width: double.infinity,
@@ -327,6 +328,7 @@ class _PaymentPageState extends State<PaymentPage> {
           ),
         ),
       ),
+    ),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/widgets/disable_route_pop.dart';
 import 'package:ticketing_flutter/services/flight.dart';
 import 'package:ticketing_flutter/services/user_service.dart';
 import 'package:ticketing_flutter/public/booking_summary.dart';
@@ -76,7 +77,7 @@ class _UserBookingDetailsPageState extends State<UserBookingDetailsPage> {
       'birthdate',
     ]);
 
-    return Scaffold(
+    return DisableRoutePop(child: Scaffold(
       appBar: AppBar(title: const Text('Your Booking Details')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -154,6 +155,7 @@ class _UserBookingDetailsPageState extends State<UserBookingDetailsPage> {
           ],
         ),
       ),
+    ),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/widgets/disable_route_pop.dart';
 import 'package:ticketing_flutter/services/user_service.dart';
 import 'package:ticketing_flutter/auth/login.dart';
 
@@ -114,7 +115,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return DisableRoutePop(child: Scaffold(
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -424,6 +425,7 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         ),
       ),
+    ),
     );
   }
 

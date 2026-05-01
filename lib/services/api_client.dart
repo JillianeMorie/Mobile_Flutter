@@ -18,7 +18,7 @@ class ApiClient {
   // TODO: Update this with your actual backend URL
   // For local development, use: http://10.0.2.2:5241 (Android emulator -> host)
   // For physical device, use your computer's IP: http://192.168.x.x:5241
-  static const String baseUrl = "http://10.0.20.237:5241/api";
+  static const String baseUrl = "http://10.0.19.238:5241/api";
 
   static const String _tokenKey = 'auth_token';
   static const String _userIdKey = 'user_id';

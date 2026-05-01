@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/widgets/disable_route_pop.dart';
 import 'package:ticketing_flutter/user/userabout.dart';
 import 'package:ticketing_flutter/user/user_explore.dart';
 import 'package:ticketing_flutter/user/user_travel_info.dart';
 import 'package:ticketing_flutter/user/user_manage/user_manage.dart';
 import 'package:ticketing_flutter/user/account_details.dart';
 import 'package:ticketing_flutter/user/user_book.dart';
+import 'package:ticketing_flutter/user/user_logout.dart';
 
 // --- CEBU PACIFIC INSPIRED COLOR PALETTE ---
 const Color cebPrimaryBlue = Color(0xFF15A7E0);
@@ -23,28 +25,33 @@ class UserFlightBookingApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primaryColor: cebDarkBlue,
-        scaffoldBackgroundColor: gradDarkMid,
-        colorScheme: ColorScheme.fromSwatch().copyWith(
-          primary: cebDarkBlue,
-          secondary: cebTeal,
-        ),
-        fontFamily: 'Inter',
-        appBarTheme: const AppBarTheme(
-          color: Colors.transparent,
-          elevation: 0,
-          titleTextStyle: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
+    return DisableRoutePop(
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primaryColor: cebDarkBlue,
+          scaffoldBackgroundColor: gradDarkMid,
+          colorScheme: ColorScheme.fromSwatch().copyWith(
+            primary: cebDarkBlue,
+            secondary: cebTeal,
           ),
+          fontFamily: 'Inter',
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            foregroundColor: Colors.white,
+            titleTextStyle: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          useMaterial3: true,
         ),
-        useMaterial3: true,
+        home: const UserBookPage(),
       ),
-      home: const UserBookPage(),
     );
   }
 }
@@ -135,12 +142,24 @@ class _UserBookPageState extends State<UserBookPage>
                 label: 'My Account',
                 onTap: () => _nav(const UserAccountDetailsPage()),
               ),
+              _drawerItem(
+                icon: Icons.logout,
+                label: 'Logout',
+                onTap: () => logoutUserAndShowLogin(context),
+              ),
             ],
           ),
         ),
 
         backgroundColor: Colors.transparent,
         appBar: AppBar(
+          // Root MaterialApp uses default light M3 theme; without these, the
+          // bar uses ColorScheme.surface (white) when this page is pushed
+          // directly (e.g. from UserBook after login), not via UserFlightBookingApp.
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          scrolledUnderElevation: 0,
+          foregroundColor: Colors.white,
           leading: Builder(
             builder: (context) => IconButton(
               icon: const Icon(Icons.menu, color: Colors.white, size: 28),

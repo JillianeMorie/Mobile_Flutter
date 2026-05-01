@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/widgets/disable_route_pop.dart';
 import 'package:ticketing_flutter/public/book_roundtrip.dart';
 import 'package:ticketing_flutter/public/book_multicity.dart';
 import 'package:ticketing_flutter/public/search_flight.dart';
@@ -212,7 +213,7 @@ class _BookOneway extends State<BookOneway> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return DisableRoutePop(child: Scaffold(
       resizeToAvoidBottomInset: false,
       drawer: Drawer(
         width: 300.0,
@@ -633,6 +634,7 @@ class _BookOneway extends State<BookOneway> {
           );
         },
       ),
+    ),
     );
   }
 

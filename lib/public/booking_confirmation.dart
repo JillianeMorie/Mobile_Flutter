@@ -68,7 +68,6 @@ class BookingConfirmationPage extends StatelessWidget {
   final String? paymentMethod;
   final String? accountCtaLabel;
   final WidgetBuilder? accountCtaPageBuilder;
-  final bool disableBackNavigation;
 
   const BookingConfirmationPage({
     super.key,
@@ -84,7 +83,6 @@ class BookingConfirmationPage extends StatelessWidget {
     this.paymentMethod,
     this.accountCtaLabel,
     this.accountCtaPageBuilder,
-    this.disableBackNavigation = false,
   });
 
   int get travelerCount => guests.length;
@@ -204,7 +202,7 @@ class BookingConfirmationPage extends StatelessWidget {
     });
 
     return PopScope(
-      canPop: !disableBackNavigation,
+      canPop: false,
       child: Scaffold(
         extendBodyBehindAppBar: true,
         body: Container(
@@ -500,15 +498,29 @@ class BookingConfirmationPage extends StatelessWidget {
                             elevation: 4,
                           ),
                           onPressed: () {
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(builder: (_) => const Home()),
-                              (route) => false,
-                            );
+                            if (accountCtaPageBuilder != null) {
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: accountCtaPageBuilder!,
+                                ),
+                                (route) => false,
+                              );
+                            } else {
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const Home(),
+                                ),
+                                (route) => false,
+                              );
+                            }
                           },
-                          child: const Text(
-                            "Back to Home",
-                            style: TextStyle(
+                          child: Text(
+                            accountCtaPageBuilder != null
+                                ? "Back To Your Account"
+                                : "Back to Home",
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1,
@@ -639,30 +651,31 @@ class BookingConfirmationPage extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      Center(
-                        child: TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    accountCtaPageBuilder ??
-                                    (context) => const RegisterPage(),
+                      if (accountCtaPageBuilder == null) ...[
+                        const SizedBox(height: 16),
+                        Center(
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const RegisterPage(),
+                                ),
+                              );
+                            },
+                            child: Text(
+                              accountCtaLabel ?? "Create an account now!",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.blueAccent,
+                                decoration: TextDecoration.underline,
                               ),
-                            );
-                          },
-                          child: Text(
-                            accountCtaLabel ?? "Create an account now!",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.blueAccent,
-                              decoration: TextDecoration.underline,
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

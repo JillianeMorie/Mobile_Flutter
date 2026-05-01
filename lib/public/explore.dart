@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/widgets/disable_route_pop.dart';
 import 'package:ticketing_flutter/public/bookpage.dart';
 import 'package:ticketing_flutter/public/about.dart';
 import 'package:ticketing_flutter/public/travel_info.dart';
@@ -50,7 +51,7 @@ class _ExplorePage extends State<ExplorePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return DisableRoutePop(child: Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -284,6 +285,7 @@ class _ExplorePage extends State<ExplorePage> {
           ),
         ),
       ),
+    ),
     );
   }
 }

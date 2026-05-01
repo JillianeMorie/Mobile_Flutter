@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/widgets/disable_route_pop.dart';
 import 'package:ticketing_flutter/public/about.dart';
 import 'package:ticketing_flutter/public/explore.dart';
 import 'package:ticketing_flutter/public/travel_info.dart';
@@ -22,7 +23,7 @@ class FlightBookingApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return DisableRoutePop(child: MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primaryColor: cebDarkBlue,
@@ -44,6 +45,7 @@ class FlightBookingApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const BookPage(),
+    ),
     );
   }
 }

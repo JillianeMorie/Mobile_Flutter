@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/widgets/disable_route_pop.dart';
 import 'package:ticketing_flutter/public/book.dart';
 import 'package:ticketing_flutter/public/scan_booking_qr.dart';
 import 'package:ticketing_flutter/auth/login.dart';
@@ -59,7 +60,7 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return DisableRoutePop(child: Scaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -442,6 +443,7 @@ class _HomeState extends State<Home> {
           ),
         ],
       ),
+    ),
     );
   }
 }

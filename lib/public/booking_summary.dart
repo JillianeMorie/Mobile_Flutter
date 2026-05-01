@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:ticketing_flutter/widgets/disable_route_pop.dart';
 import 'package:ticketing_flutter/public/payment.dart';
 import 'package:ticketing_flutter/services/flight.dart';
 
@@ -363,7 +364,7 @@ class BookingSummaryPage extends StatelessWidget {
   // ------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return DisableRoutePop(child: Scaffold(
       extendBodyBehindAppBar: true,
       body: Container(
         width: double.infinity,
@@ -408,6 +409,7 @@ class BookingSummaryPage extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }

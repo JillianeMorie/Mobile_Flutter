@@ -290,6 +290,17 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    tooltip: 'Back',
+                    icon: const Icon(
+                      Icons.arrow_back,
+                      color: Color(0xFF1E3A8A),
+                    ),
+                    onPressed: () => Navigator.maybePop(context),
+                  ),
+                ),
                 Text(
                   "${widget.flight.from} → ${widget.flight.to}",
                   style: const TextStyle(
